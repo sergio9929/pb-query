@@ -349,7 +349,7 @@ const builderFunctionsObject = [
     { name: "anyNotLike", operator: "?!~" },
 ] as const;
 
-function prepareQuery<T>(): QueryBuilder<T> {
+function pbQuery<T>(): QueryBuilder<T> {
     let query = "";
 
     const keyCounter = new Map<Path<T>, number>();
@@ -512,7 +512,7 @@ interface Post {
     user: User;
 }
 
-const query = prepareQuery<User>()
+const query = pbQuery<User>()
     .equal("name", "John")
     .and()
     .open()
@@ -526,7 +526,7 @@ const query = prepareQuery<User>()
 
 console.log(query);
 
-const { raw, values } = prepareQuery<User>()
+const { raw, values } = pbQuery<User>()
     .equal("name", "John")
     .and()
     .open()
@@ -539,7 +539,7 @@ const { raw, values } = prepareQuery<User>()
 
 console.log(filter(raw, values));
 
-const query1 = prepareQuery<Post>()
+const query1 = pbQuery<Post>()
     .equal("user.name", "John")
     .and()
     .open()
@@ -560,3 +560,9 @@ const query1 = prepareQuery<Post>()
     .build();
 
 console.log(filter(query1.raw, query1.values));
+
+
+const postQuery = pbQuery<Post>()
+
+console.log(postQuery.equal("user.name", "John").build(filter));
+console.log(postQuery.equal("user.name", "John").and().equal("user.age", 20).build(filter));

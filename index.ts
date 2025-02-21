@@ -49,6 +49,8 @@ function filter(raw: string, params?: { [key: string]: any }): string {
     return raw;
 }
 
+type FilterFunction = typeof filter;
+
 type Path<T, K extends keyof T = keyof T> = K extends string | number
     ? T[K] extends readonly any[] ? `${K}` | `${K}.${number}`
     : T[K] extends object ? `${K}` | `${K}.${Path<T[K]>}`
@@ -217,12 +219,33 @@ interface QueryBuilder<T> {
     ): RestrictedQueryBuilder<T>;
 
     /**
+     * Matches records where `key` is not in `values`.
+     * @example qb.notIn('age', [18, 21, 30]); // (age!=18 && age!=21 && age!=30)
+     */
+    notIn<P extends Path<T>>(
+        path: P,
+        values: PathValue<T, P>[],
+    ): RestrictedQueryBuilder<T>;
+
+    /**
      * Matches records where `key` is between `from` and `to`.
      * @example
      * qb.between('age', 18, 30); // (age>=18 && age<=30)
      * qb.between('createdAt', new Date('2021-01-01'), new Date('2021-12-31')); // (createdAt>='2021-01-01' && createdAt<='2021-12-31')
      */
     between<P extends Path<T>>(
+        path: P,
+        from: PathValue<T, P>,
+        to: PathValue<T, P>,
+    ): RestrictedQueryBuilder<T>;
+
+    /**
+     * Matches records where `key` is between `from` and `to`.
+     * @example
+     * qb.between('age', 18, 30); // (age<18 || age>30)
+     * qb.between('createdAt', new Date('2021-01-01'), new Date('2021-12-31')); // (createdAt<'2021-01-01' || createdAt>'2021-12-31')
+     */
+    notBetween<P extends Path<T>>(
         path: P,
         from: PathValue<T, P>,
         to: PathValue<T, P>,
@@ -263,6 +286,10 @@ interface QueryBuilder<T> {
      * console.log(query.values); // { name: 'Alice' }
      */
     build(): { raw: string; values: Record<string, any> };
+    build(filter: FilterFunction): string;
+    build(
+        filter?: FilterFunction,
+    ): { raw: string; values: Record<string, any> } | string;
 
     readonly raw: string;
     readonly values: Record<string, any>;
@@ -294,6 +321,10 @@ interface RestrictedQueryBuilder<T> {
      * console.log(query.values); // { name: 'Alice' }
      */
     build(): { raw: string; values: Record<string, any> };
+    build(filter: FilterFunction): string;
+    build(
+        filter?: FilterFunction,
+    ): { raw: string; values: Record<string, any> } | string;
 
     readonly raw: string;
     readonly values: Record<string, any>;
@@ -360,6 +391,17 @@ function prepareQuery<T>(): QueryBuilder<T> {
         };
     }
 
+    function build(): { raw: string; values: Record<string, any> };
+    function build(filter: FilterFunction): string;
+    function build(
+        filter?: FilterFunction,
+    ): { raw: string; values: Record<string, any> } | string {
+        if (filter) {
+            return filter(query, Object.fromEntries(valueMap));
+        }
+        return { raw: query, values: Object.fromEntries(valueMap) };
+    }
+
     const queryBuilder: QueryBuilder<T> = {
         ...builderFunctions,
         in<P extends Path<T>>(path: P, values: PathValue<T, P>[]) {
@@ -367,6 +409,15 @@ function prepareQuery<T>(): QueryBuilder<T> {
             values.forEach((value, index) => {
                 expression(path, "=", value);
                 query += index < values.length - 1 ? " || " : "";
+            });
+            query += ")";
+            return restrictedQueryBuilder;
+        },
+        notIn<P extends Path<T>>(path: P, values: PathValue<T, P>[]) {
+            query += "(";
+            values.forEach((value, index) => {
+                expression(path, "!=", value);
+                query += index < values.length - 1 ? " && " : "";
             });
             query += ")";
             return restrictedQueryBuilder;
@@ -380,6 +431,18 @@ function prepareQuery<T>(): QueryBuilder<T> {
             expression(path, ">=", from);
             query += " && ";
             expression(path, "<=", to);
+            query += ")";
+            return restrictedQueryBuilder;
+        },
+        notBetween<P extends Path<T>>(
+            path: P,
+            from: PathValue<T, P>,
+            to: PathValue<T, P>,
+        ) {
+            query += "(";
+            expression(path, "<", from);
+            query += " || ";
+            expression(path, ">", to);
             query += ")";
             return restrictedQueryBuilder;
         },
@@ -399,9 +462,7 @@ function prepareQuery<T>(): QueryBuilder<T> {
             query += `(`;
             return queryBuilder;
         },
-        build() {
-            return { raw: query, values: Object.fromEntries(valueMap) };
-        },
+        build,
         get raw() {
             return query;
         },
@@ -423,9 +484,7 @@ function prepareQuery<T>(): QueryBuilder<T> {
             query += `)`;
             return restrictedQueryBuilder;
         },
-        build() {
-            return { raw: query, values: Object.fromEntries(valueMap) };
-        },
+        build,
         get raw() {
             return query;
         },
@@ -453,7 +512,7 @@ interface Post {
     user: User;
 }
 
-const query1 = prepareQuery<User>()
+const query = prepareQuery<User>()
     .equal("name", "John")
     .and()
     .open()
@@ -463,12 +522,24 @@ const query1 = prepareQuery<User>()
     .close()
     .and()
     .equal("city", "New York")
-    .build();
+    .build(filter);
 
-console.log(query1);
-console.log(filter(query1.raw, query1.values));
+console.log(query);
 
-const query2 = prepareQuery<Post>()
+const { raw, values } = prepareQuery<User>()
+    .equal("name", "John")
+    .and()
+    .open()
+    .notEqual("age", 20)
+    .or()
+    .notEqual("age", 30)
+    .close()
+    .and()
+    .equal("city", "New York");
+
+console.log(filter(raw, values));
+
+const query1 = prepareQuery<Post>()
     .equal("user.name", "John")
     .and()
     .open()
@@ -488,18 +559,4 @@ const query2 = prepareQuery<Post>()
     .in("user.city", ["New York", "Los Angeles"])
     .build();
 
-console.log(query2);
-console.log(filter(query2.raw, query2.values));
-
-const { raw, values } = prepareQuery<User>()
-    .equal("name", "John")
-    .and()
-    .open()
-    .notEqual("age", 20)
-    .or()
-    .notEqual("age", 30)
-    .close()
-    .and()
-    .equal("city", "New York");
-
-console.log(filter(raw, values));
+console.log(filter(query1.raw, query1.values));

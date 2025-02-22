@@ -1,0 +1,18 @@
+export const OPERATORS = {
+    equal: '=',
+    notEqual: '!=',
+    greaterThan: '>',
+    greaterThanOrEqual: '>=',
+    lessThan: '<',
+    lessThanOrEqual: '<=',
+    like: '~',
+    notLike: '!~',
+    anyEqual: '?=',
+    anyNotEqual: '?!=',
+    anyGreaterThan: '?>',
+    anyGreaterThanOrEqual: '?>=',
+    anyLessThan: '?<',
+    anyLessThanOrEqual: '?<=',
+    anyLike: '?~',
+    anyNotLike: '?!~',
+} as const

@@ -58,7 +58,7 @@ export interface QueryBuilder<T> {
      * @example qb.equal('name', 'Alice'); // name='Alice'
      */
     equal<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
     /**
@@ -66,7 +66,7 @@ export interface QueryBuilder<T> {
      * @example qb.notEqual('age', 30); // age!=30
      */
     notEqual<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -75,7 +75,7 @@ export interface QueryBuilder<T> {
      * @example qb.greaterThan('age', 21); // age>21
      */
     greaterThan<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -84,7 +84,7 @@ export interface QueryBuilder<T> {
      * @example qb.greaterThanOrEqual('age', 18); // age>=18
      */
     greaterThanOrEqual<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -93,7 +93,7 @@ export interface QueryBuilder<T> {
      * @example qb.lessThan('age', 50); // age<50
      */
     lessThan<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -102,7 +102,7 @@ export interface QueryBuilder<T> {
      * @example qb.lessThanOrEqual('age', 65); // age<=65
      */
     lessThanOrEqual<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -111,7 +111,7 @@ export interface QueryBuilder<T> {
      * @example qb.like('name', 'Joh'); // name~'Joh'
      */
     like<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -120,7 +120,7 @@ export interface QueryBuilder<T> {
      * @example qb.notLike('name', 'Doe'); // name!~'Doe'
      */
     notLike<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -129,7 +129,7 @@ export interface QueryBuilder<T> {
      * @example qb.anyEqual('tags', 'admin'); // tags?='admin'
      */
     anyEqual<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -138,7 +138,7 @@ export interface QueryBuilder<T> {
      * @example qb.anyNotEqual('tags', 'user'); // tags?!='user'
      */
     anyNotEqual<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -147,7 +147,7 @@ export interface QueryBuilder<T> {
      * @example qb.anyGreaterThan('age', 21); // age?>21
      */
     anyGreaterThan<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -156,7 +156,7 @@ export interface QueryBuilder<T> {
      * @example qb.anyGreaterThanOrEqual('age', 18); // age?>=18
      */
     anyGreaterThanOrEqual<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -165,7 +165,7 @@ export interface QueryBuilder<T> {
      * @example qb.anyLessThan('age', 50); // age?<50
      */
     anyLessThan<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -174,7 +174,7 @@ export interface QueryBuilder<T> {
      * @example qb.anyLessThanOrEqual('age', 65); // age?<=65
      */
     anyLessThanOrEqual<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -183,7 +183,7 @@ export interface QueryBuilder<T> {
      * @example qb.anyLike('name', 'Joh'); // name?~'Joh'
      */
     anyLike<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -192,7 +192,7 @@ export interface QueryBuilder<T> {
      * @example qb.anyNotLike('name', 'Doe'); // name?!~'Doe'
      */
     anyNotLike<P extends Path<T>>(
-        path: P,
+        key: P,
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -201,7 +201,7 @@ export interface QueryBuilder<T> {
      * @example qb.search(['name', 'surname'], 'Alice'); // (name~'Alice' || surname~'Alice')
      */
     search<P extends Path<T>>(
-        paths: P[],
+        keys: P[],
         value: PathValue<T, P>,
     ): RestrictedQueryBuilder<T>
 
@@ -210,7 +210,7 @@ export interface QueryBuilder<T> {
      * @example qb.in('age', [18, 21, 30]); // (age=18 || age=21 || age=30)
      */
     in<P extends Path<T>>(
-        path: P,
+        key: P,
         values: PathValue<T, P>[],
     ): RestrictedQueryBuilder<T>
 
@@ -219,7 +219,7 @@ export interface QueryBuilder<T> {
      * @example qb.notIn('age', [18, 21, 30]); // (age!=18 && age!=21 && age!=30)
      */
     notIn<P extends Path<T>>(
-        path: P,
+        key: P,
         values: PathValue<T, P>[],
     ): RestrictedQueryBuilder<T>
 
@@ -251,13 +251,13 @@ export interface QueryBuilder<T> {
      * Matches records where `key` is null.
      * @example qb.isNull('name'); // name=''
      */
-    isNull<P extends Path<T>>(path: P): RestrictedQueryBuilder<T>
+    isNull<P extends Path<T>>(key: P): RestrictedQueryBuilder<T>
 
     /**
      * Matches records where `key` is not null.
      * @example qb.isNotNull('name'); // name!=''
      */
-    isNotNull<P extends Path<T>>(path: P): RestrictedQueryBuilder<T>
+    isNotNull<P extends Path<T>>(key: P): RestrictedQueryBuilder<T>
 
     /**
      * Executes a custom query.

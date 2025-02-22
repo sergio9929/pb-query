@@ -67,7 +67,7 @@ export function pbQuery<T>(): QueryBuilder<T> {
             throw new Error('Unclosed groups')
         }
 
-        if (filter) {
+        if (typeof filter === 'function') {
             return filter(query, Object.fromEntries(valueMap))
         }
         return { raw: query, values: Object.fromEntries(valueMap) }

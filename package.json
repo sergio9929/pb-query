@@ -9,7 +9,7 @@
         "prepare": "husky",
         "release": "tsup index.ts --format cjs,esm --dts",
         "lint": "biome check --write --no-errors-on-unmatched",
-        "test": "vitest"
+        "test": "vitest run"
     },
     "keywords": [],
     "author": "",

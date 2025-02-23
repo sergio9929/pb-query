@@ -12,7 +12,7 @@
         "release:publish": "changeset publish",
         "release": "run-s release:*",
         "lint": "biome check --write --no-errors-on-unmatched",
-        "test": "vitest run"
+        "test": "vitest run --typecheck"
     },
     "keywords": [],
     "author": "sergio9929",
@@ -23,6 +23,7 @@
         "husky": "^9.1.7",
         "lint-staged": "^15.4.3",
         "npm-run-all": "^4.1.5",
+        "pocketbase": "^0.25.1",
         "tsup": "^8.3.6",
         "typescript": "^5.7.3",
         "vitest": "^3.0.6"

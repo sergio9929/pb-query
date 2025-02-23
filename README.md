@@ -5,8 +5,8 @@
 **Build type-safe PocketBase queries with the power of TypeScript.**  
 *Stop wrestling with filter strings. Start composing queries like code.*
 
-[![npm](https://img.shields.io/npm/v/pb-query)](https://www.npmjs.com/package/pb-query)
-[![jsr](https://img.shields.io/badge/jsr-pb--query-blue)](https://jsr.io/@pb-query/core)
+[![npm](https://img.shields.io/npm/v/@sergio9929/pb-query)](https://www.npmjs.com/package/@sergio9929/pb-query)
+[![jsr](https://img.shields.io/badge/jsr-pb--query-blue)](https://jsr.io/@sergio9929/pb-query/core)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?logo=typescript&logoColor=white)
 
 ## Features
@@ -22,13 +22,13 @@
 
 ```bash
 # npm
-npm install pb-query
+npm install @sergio9929/pb-query
 
 # pnpm
-pnpm add pb-query
+pnpm add @sergio9929/pb-query
 
 # yarn
-yarn add pb-query
+yarn add @sergio9929/pb-query
 ```
 
 Or via JSR:
@@ -39,7 +39,7 @@ npx jsr add @pb/core
 ## Quick Start
 
 ```typescript
-import { pbQuery } from 'pb-query';
+import { pbQuery } from '@sergio9929/pb-query';
 import type { Post } from './types';
 
 // Build a type-safe query for posts
@@ -60,6 +60,9 @@ console.log(query);
 // && (createdAt>='2023-01-01' && createdAt<='2023-12-31') 
 // || ((tags?~'%urgent%' && priority>5))
 ```
+
+> [!IMPORTANT]
+> You can use this package without typescript, but you would miss out on many of the advantages we offer.
 
 ## Table of Contents
 
@@ -400,8 +403,6 @@ const productQuery = pbQuery<Product>()
 
 ---
 
-**pb-query** is maintained by [Your Company] with ❤️  
+**pb-query** is maintained by [@sergio9929](https://github.com/sergio9929) with ❤️  
 Found a bug? [Open an issue](https://github.com/your/repo/issues)  
 Want to contribute? [Read our guide](CONTRIBUTING.md)  
-
-*Empowering developers to build safer, better typed applications since 2023*

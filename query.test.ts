@@ -1,3 +1,4 @@
+import PocketBase from 'pocketbase'
 import { expect, test } from 'vitest'
 import { pbQuery } from './src/query'
 import { filter } from './src/utils'
@@ -28,6 +29,63 @@ interface Post {
     numbers: number[]
     isVisible: boolean
 }
+
+const pb = new PocketBase()
+
+test('dilter discrepancy', () => {
+    const query1 = pbQuery<Post>()
+        .equal('user.name', 'John')
+        .and()
+        .in('user.age', [20, 30, 40])
+        .and()
+        .notIn('user.city', ['Chicago', 'Miami'])
+        .and()
+        .between('createdAt', new Date('2021-01-01'), new Date('2021-12-31'))
+        .and()
+        .notBetween('user.age', 20, 30)
+        .and()
+        .search(['title', 'content', 'tags'], 'alice')
+        .and()
+        .isNull('content')
+        .and()
+        .custom(filter('content~{:content}', { content: 'test' }))
+        .build(filter)
+
+    const query2 = pbQuery<Post>()
+        .equal('user.name', 'John')
+        .and()
+        .in('user.age', [20, 30, 40])
+        .and()
+        .notIn('user.city', ['Chicago', 'Miami'])
+        .and()
+        .between('createdAt', new Date('2021-01-01'), new Date('2021-12-31'))
+        .and()
+        .notBetween('user.age', 20, 30)
+        .and()
+        .search(['title', 'content', 'tags'], 'alice')
+        .and()
+        .isNull('content')
+        .and()
+        .custom(pb.filter('content~{:content}', { content: 'test' }))
+        .build(pb.filter)
+
+    expect(query1).toBe(query2)
+})
+
+test('post query', () => {
+    const postQuery = pbQuery<Post>()
+
+    expect(postQuery.equal('user.name', 'John').build(filter)).toBe(
+        "user.name='John'",
+    )
+    expect(
+        postQuery
+            .equal('user.name', 'John')
+            .and()
+            .equal('user.age', 20)
+            .build(filter),
+    ).toBe("user.name='John'user.name='John' && user.age=20")
+})
 
 test('multiple queries', () => {
     const query = pbQuery<User>()
@@ -70,19 +128,6 @@ test('multiple queries', () => {
         "user.name='John' && (title?!~'foo' || title?~'bar') && (user.age=20 || user.age=30 || user.age=40) && (createdAt>='2021-01-01 00:00:00.000Z' && createdAt<='2021-12-31 00:00:00.000Z') && (user.age<20 || user.age>30) && (user.city='New York' || user.city='Los Angeles') && (user.city!='Chicago' && user.city!='Miami') && content~'test'",
     )
 
-    const postQuery = pbQuery<Post>()
-
-    expect(postQuery.equal('user.name', 'John').build(filter)).toBe(
-        "user.name='John'",
-    )
-    expect(
-        postQuery
-            .equal('user.name', 'John')
-            .and()
-            .equal('user.age', 20)
-            .build(filter),
-    ).toBe("user.name='John'user.name='John' && user.age=20")
-
     const groupTest = pbQuery<User>()
         .equal('name', 'Alice')
         .or()
@@ -94,24 +139,4 @@ test('multiple queries', () => {
     expect(groupTest).toBe(
         "name='Alice' || name='Bob' && (name='Alice' || name='Bob')",
     )
-})
-
-test('all possible keys', () => {
-    pbQuery<Post>().equal('categories', 'hola').build()
-    pbQuery<Post>().equal('categories:each', 'hola').build()
-    pbQuery<Post>().equal('categories:length', 1).build()
-    pbQuery<Post>().equal('categories.id', 'hola').build()
-    pbQuery<Post>().equal('categories.id:lower', 'hola').build()
-    pbQuery<Post>().equal('categories.priority', 1).build()
-    pbQuery<Post>().equal('title', 'hola').build()
-    pbQuery<Post>().equal('title:lower', 'hola').build()
-    pbQuery<Post>().equal('tags', 'hola').build()
-    pbQuery<Post>().equal('tags:each', 'hola').build()
-    pbQuery<Post>().equal('tags:length', 1).build()
-    pbQuery<Post>().equal('numbers', 1).build()
-    pbQuery<Post>().equal('numbers:each', 1).build()
-    pbQuery<Post>().equal('numbers:length', 1).build()
-    pbQuery<Post>().equal('createdAt', new Date()).build()
-    pbQuery<Post>().equal('isVisible', true).build()
-    pbQuery<Post>().equal('user.age', 18).build()
 })

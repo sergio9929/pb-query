@@ -10,7 +10,7 @@ export function filter(
         return raw
     }
 
-    let sanitizedQuery = ''
+    let sanitizedQuery = raw
 
     for (const key in params) {
         let val = params[key]

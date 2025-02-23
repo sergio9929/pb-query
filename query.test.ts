@@ -30,7 +30,7 @@ interface Post {
 }
 
 test('multiple queries', () => {
-    const query = pbQuery<User, 1>()
+    const query = pbQuery<User>()
         .equal('name', 'John')
         .and()
         .open()

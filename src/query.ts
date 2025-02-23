@@ -1,14 +1,17 @@
-import { OPERATORS } from './constants.ts'
-import {
+import { OPERATORS } from './constants'
+import type {
     FilterFunction,
     Path,
     PathValue,
     QueryBuilder,
     RawQueryObject,
     RestrictedQueryBuilder,
-} from './types.ts'
+} from './types'
 
-export function pbQuery<T>(): QueryBuilder<T> {
+export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
+    T,
+    MaxDepth
+> {
     let query = ''
     let depth = 0
 
@@ -43,7 +46,7 @@ export function pbQuery<T>(): QueryBuilder<T> {
     type BuilderFunction = <P extends Path<T>>(
         key: P,
         values: PathValue<T, P>,
-    ) => RestrictedQueryBuilder<T>
+    ) => RestrictedQueryBuilder<T, MaxDepth>
 
     const builderFunctions = {} as Record<
         keyof typeof OPERATORS,
@@ -73,7 +76,7 @@ export function pbQuery<T>(): QueryBuilder<T> {
         return { raw: query, values: Object.fromEntries(valueMap) }
     }
 
-    const queryBuilder: QueryBuilder<T> = {
+    const queryBuilder: QueryBuilder<T, MaxDepth> = {
         ...builderFunctions,
         search(keys, value) {
             query += '('
@@ -133,32 +136,32 @@ export function pbQuery<T>(): QueryBuilder<T> {
         },
         open() {
             depth++
-            query += `(`
+            query += '('
             return queryBuilder
         },
         group(callback) {
             depth++
-            query += `(`
+            query += '('
             callback(queryBuilder)
             depth--
-            query += `)`
+            query += ')'
             return restrictedQueryBuilder
         },
         build,
     }
 
-    const restrictedQueryBuilder: RestrictedQueryBuilder<T> = {
+    const restrictedQueryBuilder: RestrictedQueryBuilder<T, MaxDepth> = {
         and() {
-            query += ` && `
+            query += ' && '
             return queryBuilder
         },
         or() {
-            query += ` || `
+            query += ' || '
             return queryBuilder
         },
         close() {
             depth--
-            query += `)`
+            query += ')'
             return restrictedQueryBuilder
         },
         build,

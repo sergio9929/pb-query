@@ -1,7 +1,7 @@
-export { pbQuery } from './query.ts'
+export { pbQuery } from './src/query'
 export type {
     FilterFunction,
     QueryBuilder,
     RestrictedQueryBuilder,
-} from './types.ts'
-export { OPERATORS } from './constants.ts'
+} from './src/types'
+export { OPERATORS } from './src/constants'

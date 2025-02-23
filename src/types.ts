@@ -1,39 +1,75 @@
-export type FilterFunction = (raw: string, params?: {
-    [key: string]: unknown
-}) => string
+export type FilterFunction = (
+    raw: string,
+    params?: {
+        [key: string]: unknown
+    },
+) => string
 
 export type RawQueryObject = { raw: string; values: Record<string, unknown> }
 
-export type Path<T, K extends keyof T = keyof T> = K extends string
-    ? T[K] extends string ? `${K}` | `${K}:lower`
-    : T[K] extends readonly object[]
-        ? `${K}` | `${K}:each` | `${K}:length` | `${K}.${Path<T[K][number]>}`
-    : T[K] extends readonly unknown[] ? `${K}` | `${K}:each` | `${K}:length`
-    : T[K] extends Date ? `${K}`
-    : T[K] extends object ? `${K}` | `${K}.${Path<T[K]>}`
-    : `${K}`
-    : never
+type DepthCounter = [1, 2, 3, 4, 5, 6, never]
 
-export type PathValue<T, P extends string> = P extends
-    `${infer Key}.${infer Rest}`
-    ? Key extends keyof T
-        ? T[Key] extends readonly (infer E)[] ? PathValue<E, Rest> // If it's an array, continue resolving on its elements
-        : PathValue<T[Key], Rest> // Otherwise, continue resolving normally
-    : never
-    : P extends `${infer Key}:${infer Modifier}`
-        ? Key extends keyof T ? HandleModifier<T[Key], Modifier>
-        : never
-    : P extends keyof T ? T[P] extends object[] ? string
-        : T[P] extends unknown[] ? T[P][number]
-        : T[P]
-    : never
+export type Path<
+    T,
+    K extends keyof T = keyof T,
+    MaxDepth extends number = 6,
+    D extends number = 0,
+> = D extends MaxDepth
+    ? never
+    : K extends string
+      ? T[K] extends string
+          ? `${K}` | `${K}:lower`
+          : T[K] extends readonly object[]
+            ?
+                  | `${K}`
+                  | `${K}:each`
+                  | `${K}:length`
+                  | `${K}.${Path<T[K][number], keyof T[K][number], MaxDepth, DepthCounter[D]>}`
+            : T[K] extends readonly unknown[]
+              ? `${K}` | `${K}:each` | `${K}:length`
+              : T[K] extends Date
+                ? `${K}`
+                : T[K] extends object
+                  ?
+                        | `${K}`
+                        | `${K}.${Path<T[K], keyof T[K], MaxDepth, DepthCounter[D]>}`
+                  : `${K}`
+      : never
+
+export type PathValue<
+    T,
+    P extends string,
+    MaxDepth extends number = 6,
+    D extends number = 0,
+> = D extends MaxDepth
+    ? never
+    : P extends `${infer Key}.${infer Rest}`
+      ? Key extends keyof T
+          ? T[Key] extends readonly (infer E)[]
+              ? PathValue<E, Rest, MaxDepth, DepthCounter[D]> // If it's an array, continue resolving on its elements
+              : PathValue<T[Key], Rest, MaxDepth, DepthCounter[D]> // Otherwise, continue resolving normally
+          : never
+      : P extends `${infer Key}:${infer Modifier}`
+        ? Key extends keyof T
+            ? HandleModifier<T[Key], Modifier>
+            : never
+        : P extends keyof T
+          ? T[P] extends object[]
+              ? string
+              : T[P] extends unknown[]
+                ? T[P][number]
+                : T[P]
+          : never
 
 export type HandleModifier<V, Modifier extends string> = Modifier extends 'each'
-    ? V extends number[] ? number
-    : string
-    : Modifier extends 'length' ? number
-    : Modifier extends 'lower' ? string
-    : never
+    ? V extends number[]
+        ? number
+        : string
+    : Modifier extends 'length'
+      ? number
+      : Modifier extends 'lower'
+        ? string
+        : never
 
 // TODO: Implement a query builder that can build a query string with the following methods
 // = Equal
@@ -52,23 +88,29 @@ export type HandleModifier<V, Modifier extends string> = Modifier extends 'each'
 // ?<= Any/At least one of Less than or equal
 // ?~ Any/At least one of Like/Contains (if not specified auto wraps the right string OPERAND in a "%" for wildcard match)
 // ?!~ Any/At least one of NOT Like/Contains (if not specified auto wraps the right string OPERAND in a "%" for wildcard match)
-export interface QueryBuilder<T> {
+export interface QueryBuilder<T, MaxDepth extends number = 6> {
     /**
      * Matches records where key equals value.
-     * @example qb.equal('name', 'Alice'); // name='Alice'
+     * @example
+     * qb.equal('name', 'Alice'); // name='Alice'
+     * // the `:lower` modifier can be used to make it case insensitive
+     * qb.equal('name:lower', 'john doe'); // name='john doe'
      */
     equal<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
     /**
      * Matches records where `key` is not equal to `value`.
-     * @example qb.notEqual('age', 30); // age!=30
+     * @example
+     * qb.notEqual('age', 30); // age!=30
+     * // the `:lower` modifier can be used to make it case insensitive
+     * qb.notEqual('name:lower', 'john doe'); // name!='john doe'
      */
     notEqual<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where `key` is greater than `value`.
@@ -77,7 +119,7 @@ export interface QueryBuilder<T> {
     greaterThan<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where `key` is greater than or equal to `value`.
@@ -86,7 +128,7 @@ export interface QueryBuilder<T> {
     greaterThanOrEqual<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where `key` is less than `value`.
@@ -95,7 +137,7 @@ export interface QueryBuilder<T> {
     lessThan<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where `key` is less than or equal to `value`.
@@ -104,7 +146,7 @@ export interface QueryBuilder<T> {
     lessThanOrEqual<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Performs a wildcard match.
@@ -113,7 +155,7 @@ export interface QueryBuilder<T> {
     like<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Negated wildcard match.
@@ -122,7 +164,7 @@ export interface QueryBuilder<T> {
     notLike<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where at least one value equals `value`.
@@ -131,7 +173,7 @@ export interface QueryBuilder<T> {
     anyEqual<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where at least one value does not equal `value`.
@@ -140,7 +182,7 @@ export interface QueryBuilder<T> {
     anyNotEqual<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where at least one value is greater than `value`.
@@ -149,7 +191,7 @@ export interface QueryBuilder<T> {
     anyGreaterThan<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where at least one value is greater than or equal to `value`.
@@ -158,7 +200,7 @@ export interface QueryBuilder<T> {
     anyGreaterThanOrEqual<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where at least one value is less than `value`.
@@ -167,7 +209,7 @@ export interface QueryBuilder<T> {
     anyLessThan<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where at least one value is less than or equal to `value`.
@@ -176,7 +218,7 @@ export interface QueryBuilder<T> {
     anyLessThanOrEqual<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Performs a wildcard match on at least one value.
@@ -185,7 +227,7 @@ export interface QueryBuilder<T> {
     anyLike<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Negated wildcard match on at least one value.
@@ -194,7 +236,7 @@ export interface QueryBuilder<T> {
     anyNotLike<P extends Path<T>>(
         key: P,
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where `key` is in `values`.
@@ -203,7 +245,7 @@ export interface QueryBuilder<T> {
     search<P extends Path<T>>(
         keys: P[],
         value: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where `key` is in `values`.
@@ -212,7 +254,7 @@ export interface QueryBuilder<T> {
     in<P extends Path<T>>(
         key: P,
         values: PathValue<T, P>[],
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where `key` is not in `values`.
@@ -221,7 +263,7 @@ export interface QueryBuilder<T> {
     notIn<P extends Path<T>>(
         key: P,
         values: PathValue<T, P>[],
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where `key` is between `from` and `to`.
@@ -233,7 +275,7 @@ export interface QueryBuilder<T> {
         key: P,
         from: PathValue<T, P>,
         to: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where `key` is between `from` and `to`.
@@ -245,19 +287,19 @@ export interface QueryBuilder<T> {
         key: P,
         from: PathValue<T, P>,
         to: PathValue<T, P>,
-    ): RestrictedQueryBuilder<T>
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where `key` is null.
      * @example qb.isNull('name'); // name=''
      */
-    isNull<P extends Path<T>>(key: P): RestrictedQueryBuilder<T>
+    isNull<P extends Path<T>>(key: P): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Matches records where `key` is not null.
      * @example qb.isNotNull('name'); // name!=''
      */
-    isNotNull<P extends Path<T>>(key: P): RestrictedQueryBuilder<T>
+    isNotNull<P extends Path<T>>(key: P): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Executes a custom query.
@@ -266,21 +308,23 @@ export interface QueryBuilder<T> {
      * // We recommend using the native `pb.filter()` function
      * qb.custom(pb.filter('age > {:age}', { age: 21 })); // age > 21
      */
-    custom(raw: string): RestrictedQueryBuilder<T>
+    custom(raw: string): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Opens a subquery.
      * @example qb.open().equal('status', 'active').close();
      */
-    open(): QueryBuilder<T>
+    open(): QueryBuilder<T, MaxDepth>
 
     /**
      * Opens a subquery group.
      * @example qb.group(qb => qb.equal('status', 'active').or().equal('status', 'inactive'));
      */
     group(
-        callback: (qb: QueryBuilder<T>) => RestrictedQueryBuilder<T>,
-    ): RestrictedQueryBuilder<T>
+        callback: (
+            qb: QueryBuilder<T, MaxDepth>,
+        ) => RestrictedQueryBuilder<T, MaxDepth>,
+    ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Returns the query string and values.
@@ -302,23 +346,23 @@ export interface QueryBuilder<T> {
     ): { raw: string; values: Record<string, unknown> } | string
 }
 
-export interface RestrictedQueryBuilder<T> {
+export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6> {
     /**
      * Combines the current condition with an AND.
      * @example qb.equal('name', 'Alice').and().greaterThan('age', 21);
      */
-    and(): Omit<QueryBuilder<T>, 'build'>
+    and(): Omit<QueryBuilder<T, MaxDepth>, 'build'>
     /**
      * Combines the current condition with an `OR`.
      * @example qb.equal('name', 'Alice').or().equal('name', 'Bob');
      */
-    or(): Omit<QueryBuilder<T>, 'build'>
+    or(): Omit<QueryBuilder<T, MaxDepth>, 'build'>
 
     /**
      * Closes a previously opened subquery.
      * @example qb.open().equal('status', 'active').close();
      */
-    close(): RestrictedQueryBuilder<T>
+    close(): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Returns the query string and values.

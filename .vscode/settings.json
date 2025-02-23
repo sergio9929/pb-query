@@ -1,0 +1,15 @@
+{
+    // Disable the default formatter, use biomejs instead
+    "prettier.enable": false,
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": "biomejs.biome",
+
+    // Auto fix
+    "editor.codeActionsOnSave": {
+        "quickfix.biome": "explicit",
+        "source.organizeImports.biome": "explicit"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    }
+}

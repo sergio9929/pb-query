@@ -1,5 +1,5 @@
 {
-    "name": "pb-query-builder-ts",
+    "name": "@sergio9929/pb-query",
     "version": "0.0.1",
     "description": "A type-safe PocketBase query builder",
     "main": "dist/index.js",
@@ -15,7 +15,7 @@
         "test": "vitest run"
     },
     "keywords": [],
-    "author": "",
+    "author": "sergio9929",
     "license": "ISC",
     "devDependencies": {
         "@biomejs/biome": "^1.9.4",
@@ -29,5 +29,13 @@
     },
     "lint-staged": {
         "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": "pnpm lint"
-    }
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sergio9929/pb-query.git"
+    },
+    "bugs": {
+        "url": "https://github.com/sergio9929/pb-query/issues"
+    },
+    "homepage": "https://github.com/sergio9929/pb-query#readme"
 }

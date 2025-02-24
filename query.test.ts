@@ -8,41 +8,44 @@ interface User {
     name: string
     age: number
     city: string
-    roles: string[]
+    permissions: string[]
+    created: Date
+    updated: Date
 }
 
-interface Category {
+interface SpecialPost {
     id: string
-    name: string
-    priority: number
+    title: string
+    content: string
+    created: Date
+    updated: Date
 }
 
 interface Post {
     id: string
     title: string
     content: string
-    createdAt: Date
-    updatedAt: Date
-    user: User
-    tags: string[]
-    categories: Category[]
-    numbers: number[]
+    author: User
     isVisible: boolean
+    tags: string[]
+    related: SpecialPost[]
+    created: Date
+    updated: Date
 }
 
 const pb = new PocketBase()
 
 test('dilter discrepancy', () => {
     const query1 = pbQuery<Post>()
-        .equal('user.name', 'John')
+        .equal('author.name', 'John')
         .and()
-        .in('user.age', [20, 30, 40])
+        .in('author.age', [20, 30, 40])
         .and()
-        .notIn('user.city', ['Chicago', 'Miami'])
+        .notIn('author.city', ['Chicago', 'Miami'])
         .and()
-        .between('createdAt', new Date('2021-01-01'), new Date('2021-12-31'))
+        .between('created', new Date('2021-01-01'), new Date('2021-12-31'))
         .and()
-        .notBetween('user.age', 20, 30)
+        .notBetween('author.age', 20, 30)
         .and()
         .search(['title', 'content', 'tags'], 'alice')
         .and()
@@ -52,15 +55,15 @@ test('dilter discrepancy', () => {
         .build(filter)
 
     const query2 = pbQuery<Post>()
-        .equal('user.name', 'John')
+        .equal('author.name', 'John')
         .and()
-        .in('user.age', [20, 30, 40])
+        .in('author.age', [20, 30, 40])
         .and()
-        .notIn('user.city', ['Chicago', 'Miami'])
+        .notIn('author.city', ['Chicago', 'Miami'])
         .and()
-        .between('createdAt', new Date('2021-01-01'), new Date('2021-12-31'))
+        .between('created', new Date('2021-01-01'), new Date('2021-12-31'))
         .and()
-        .notBetween('user.age', 20, 30)
+        .notBetween('author.age', 20, 30)
         .and()
         .search(['title', 'content', 'tags'], 'alice')
         .and()
@@ -75,27 +78,23 @@ test('dilter discrepancy', () => {
 test('post query', () => {
     const postQuery = pbQuery<Post>()
 
-    expect(postQuery.equal('user.name', 'John').build(filter)).toBe(
-        "user.name='John'",
+    expect(postQuery.equal('author.name', 'John').build(filter)).toBe(
+        "author.name='John'",
     )
     expect(
         postQuery
-            .equal('user.name', 'John')
+            .equal('author.name', 'John')
             .and()
-            .equal('user.age', 20)
+            .equal('author.age', 20)
             .build(filter),
-    ).toBe("user.name='John'user.name='John' && user.age=20")
+    ).toBe("author.name='John'author.name='John' && author.age=20")
 })
 
 test('multiple queries', () => {
     const query = pbQuery<User>()
         .equal('name', 'John')
         .and()
-        .open()
-        .notEqual('age', 20)
-        .or()
-        .notEqual('age', 30)
-        .close()
+        .group((q) => q.notEqual('age', 20).or().notEqual('age', 30))
         .and()
         .equal('city', 'New York')
         .build(filter)
@@ -103,29 +102,25 @@ test('multiple queries', () => {
     expect(query).toBe("name='John' && (age!=20 || age!=30) && city='New York'")
 
     const query1 = pbQuery<Post>()
-        .equal('user.name', 'John')
+        .equal('author.name', 'John')
         .and()
-        .open()
-        .anyNotLike('title', 'foo')
-        .or()
-        .anyLike('title', 'bar')
-        .close()
+        .group((q) => q.anyNotLike('title', 'foo').or().anyLike('title', 'bar'))
         .and()
-        .in('user.age', [20, 30, 40])
+        .in('author.age', [20, 30, 40])
         .and()
-        .between('createdAt', new Date('2021-01-01'), new Date('2021-12-31'))
+        .between('created', new Date('2021-01-01'), new Date('2021-12-31'))
         .and()
-        .notBetween('user.age', 20, 30)
+        .notBetween('author.age', 20, 30)
         .and()
-        .in('user.city', ['New York', 'Los Angeles'])
+        .in('author.city', ['New York', 'Los Angeles'])
         .and()
-        .notIn('user.city', ['Chicago', 'Miami'])
+        .notIn('author.city', ['Chicago', 'Miami'])
         .and()
         .custom(filter('content~{:content}', { content: 'test' }))
         .build()
 
     expect(filter(query1.raw, query1.values)).toBe(
-        "user.name='John' && (title?!~'foo' || title?~'bar') && (user.age=20 || user.age=30 || user.age=40) && (createdAt>='2021-01-01 00:00:00.000Z' && createdAt<='2021-12-31 00:00:00.000Z') && (user.age<20 || user.age>30) && (user.city='New York' || user.city='Los Angeles') && (user.city!='Chicago' && user.city!='Miami') && content~'test'",
+        "author.name='John' && (title?!~'foo' || title?~'bar') && (author.age=20 || author.age=30 || author.age=40) && (created>='2021-01-01 00:00:00.000Z' && created<='2021-12-31 00:00:00.000Z') && (author.age<20 || author.age>30) && (author.city='New York' || author.city='Los Angeles') && (author.city!='Chicago' && author.city!='Miami') && content~'test'",
     )
 
     const groupTest = pbQuery<User>()

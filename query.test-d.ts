@@ -8,7 +8,7 @@ interface User {
     name: string
     age: number
     city: string
-    roles: string[]
+    permissions: string[]
 }
 
 interface Category {

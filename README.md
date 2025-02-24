@@ -6,7 +6,6 @@
 *Stop wrestling with filter strings. Start composing queries like code.*
 
 [![npm](https://img.shields.io/npm/v/@sergio9929/pb-query)](https://www.npmjs.com/package/@sergio9929/pb-query)
-[![jsr](https://img.shields.io/badge/jsr-pb--query-blue)](https://jsr.io/@sergio9929/pb-query/core)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?logo=typescript&logoColor=white)
 
 ## Features
@@ -31,34 +30,38 @@ pnpm add @sergio9929/pb-query
 yarn add @sergio9929/pb-query
 ```
 
-Or via JSR:
-```bash
-npx jsr add @pb/core
-```
-
 ## Quick Start
 
-```typescript
+```ts
 import { pbQuery } from '@sergio9929/pb-query';
+import PocketBase from 'pocketbase';
 import type { Post } from './types';
+
+// PocketBase instance
+const pb = new PocketBase("https://example.com")
 
 // Build a type-safe query for posts
 const query = pbQuery<Post>()
-  .search(['title', 'content'], 'important')
+  .search(['title', 'content', 'tags', 'author'], 'footba')
   .and()
   .between('createdAt', new Date('2023-01-01'), new Date('2023-12-31'))
   .or()
-  .group(qb => 
-    qb.anyLike('tags', '%urgent%')
+  .group(q => 
+    q.anyLike('tags', 'sports')
       .and()
       .greaterThan('priority', 5)
   )
   .build(pb.filter);
 
 console.log(query);
-// (title~'important' || content~'important') 
+// (title~'footba' || content~'footba' || tags~'footba' || author~'footba') 
 // && (createdAt>='2023-01-01' && createdAt<='2023-12-31') 
-// || ((tags?~'%urgent%' && priority>5))
+// || ((tags?~'sports' && priority>5))
+
+// Use your query
+const records = await pb.collection("posts").getList(1, 20, {
+  filter: query
+})
 ```
 
 > [!IMPORTANT]
@@ -82,24 +85,39 @@ Building complex filters in PocketBase often leads to:
 
 1. **String Concatenation Hell**  
    `'createdAt >= "2023-01-01" && (tags ~ "%urgent%" || priority > 5)'`  
-   😱 Easy to make syntax errors, hard to maintain
+   😱 Prone to syntax errors and difficult to maintain
 
 2. **Type Safety Issues**  
    `'user.age > "twenty"'`  
-   😬 No type checking for field names or values
+   😬 Incorrect value types can cause runtime errors
 
-3. **Security Risks**  
+3. **Typos**  
+   `'user.ege > "twenty"'`  
+   😬 No type checking for field names, leading to hard-to-find bugs
+
+4. **Security Risks**  
    `title ~ '${userInput}'`  
-   😨 Manual string interpolation risks injection attacks
+   😨 Manual string interpolation can lead to injection attacks
 
 **pb-query solves all this:**  
-```typescript
+```ts
 pbQuery<Post>()
   .greaterThan('user.age', 25) // Type-checked age
   .and()
-  .like('title', `%${safeUserInput}%`) // Automatic escaping
+  .like('title', `${safeUserInput}`) // Automatic escaping
   .build(pb.filter)
 ```
+
+### Code Suggestions and JSDoc
+
+Documentation directly in your IDE.
+
+![JSDoc](docs/jsdoc.png)
+
+Leveraging the power of typescript we can give you suggestions based on your schema.
+
+![Field name suggestions](docs/field%20name%20suggestions.png)
+
 
 ## Core Concepts
 
@@ -107,19 +125,20 @@ pbQuery<Post>()
 
 Access nested fields and special properties using PocketBase's path syntax:
 
-```typescript
+```ts
 pbQuery<Post>()
-  .equal('user.name', 'Alice')         // Direct property
-  .equal('tags:length', 5)            // Array length
-  .equal('categories:each.name', 'Tech') // Array elements
-  .equal('title:lower', 'hello world') // Case-insensitive
+  .equal('user.name', 'Alice') // Access nested properties
+  .equal('title:lower', 'hello world') // Case-insensitive (not needed for .like() operators)
+  .equal('tags:length', 5) // If array length equals to 5
+  .equal('tags:each', 'Tech') // If every array element equals to 'Tech'
 ```
 
 ### Parameter Safety
 
-All values are automatically parameterized:
+We don't filter your query by default, so by just using `.build()` you will get the unfiltered query and the values separatelly.
 
-```typescript
+```ts
+// ❌ Unfiltered query
 const { raw, values } = pbQuery<Post>()
   .like('content', 'Top Secret%')
   .build();
@@ -128,18 +147,34 @@ console.log(raw);    // "content~{:content1}"
 console.log(values); // { content1: "Top Secret%" }
 ```
 
+We expose a filter function, but we recommend using the native `pb.filter()` function instead.
+
+```ts
+import PocketBase from 'pocketbase';
+
+// PocketBase instance
+const pb = new PocketBase("https://example.com")
+
+// ✅ Filtered query
+const query = pbQuery<Post>()
+  .like('content', 'Top Secret%')
+  .build(pb.filter); // use PocketBase's filter function
+
+console.log(query);  // "content~'Top Secret%'"
+```
+
 ## Basic Operators
 
 ### Equality Checks
 
 #### `.equal(path, value)`
-```typescript
+```ts
 pbQuery<User>().equal('age', 25)
 // age=25
 ```
 
 #### `.notEqual(path, value)`
-```typescript
+```ts
 pbQuery<User>().notEqual('status', 'banned')
 // status!='banned'
 ```
@@ -147,13 +182,13 @@ pbQuery<User>().notEqual('status', 'banned')
 ### Comparisons
 
 #### `.greaterThan(path, value)`
-```typescript
+```ts
 pbQuery<Post>().greaterThan('views', 1000)
 // views>1000
 ```
 
 #### `.lessThanOrEqual(path, value)`
-```typescript
+```ts
 pbQuery<Post>().lessThanOrEqual('priority', 3)
 // priority<=3
 ```
@@ -161,13 +196,13 @@ pbQuery<Post>().lessThanOrEqual('priority', 3)
 ### Text Search
 
 #### `.like(path, value)`
-```typescript
+```ts
 pbQuery<User>().like('email', '%@gmail.com')
 // email~'%@gmail.com'
 ```
 
 #### `.notLike(path, value)`
-```typescript
+```ts
 pbQuery<User>().notLike('phone', '+1%')
 // phone!~'+1%'
 ```
@@ -177,7 +212,7 @@ pbQuery<User>().notLike('phone', '+1%')
 ### Logical Operators
 
 #### `.and()`
-```typescript
+```ts
 pbQuery<User>()
   .equal('role', 'admin')
   .and()
@@ -186,7 +221,7 @@ pbQuery<User>()
 ```
 
 #### `.or()`
-```typescript
+```ts
 pbQuery<User>()
   .equal('status', 'active')
   .or()
@@ -197,41 +232,29 @@ pbQuery<User>()
 ### Grouping
 
 #### `.group(callback)`
-```typescript
+```ts
 pbQuery<Post>()
-  .group(qb => 
-    qb.like('title', '%important%')
+  .group(q => 
+    q.like('title', '%important%')
       .or()
       .like('content', '%important%')
   )
 // (title~'%important%' || content~'%important%')
 ```
 
-#### `.open()`/`.close()`
-```typescript
-pbQuery<User>()
-  .open()
-    .equal('age', 20)
-    .or()
-    .equal('age', 30)
-  .close()
-  .and()
-  .equal('verified', true)
-// (age=20 || age=30) && verified=true
-```
 
 ## Collection Operations
 
 ### Array Matching
 
 #### `.anyEqual(path, value)`
-```typescript
+```ts
 pbQuery<Post>().anyEqual('tags', 'urgent')
 // tags?='urgent'
 ```
 
 #### `.anyLike(path, value)`
-```typescript
+```ts
 pbQuery<User>().anyLike('emails', '%@compromised.com')
 // emails?~'%@compromised.com'
 ```
@@ -239,23 +262,46 @@ pbQuery<User>().anyLike('emails', '%@compromised.com')
 ### Multi-Value Filters
 
 #### `.in(path, values)`
-```typescript
+```ts
 pbQuery<User>().in('role', ['admin', 'moderator'])
 // (role='admin' || role='moderator')
 ```
 
 #### `.notBetween(path, from, to)`
-```typescript
+```ts
 pbQuery<Post>()
   .notBetween('createdAt', startDate, endDate)
 // (createdAt<'2023-01-01' || createdAt>'2023-12-31')
 ```
 
+### Any Queries (Any/At least one of)
+
+Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+
+Return all authors who have published at least one book about "Harry Potter":
+
+```ts
+pbQuery<Book>.anyLike('books_via_author.title', 'Harry Potter'); // post_via_author.name?~'Harry Potter'
+```
+
+Return all authors who have only published books about "Harry Potter":
+
+```ts
+pbQuery<Book>.like('books_via_author.title', 'Harry Potter'); // post_via_author.name~'Harry Potter'
+```
+
+Returns all the authors who have published 
+
+> [!NOTE]
+> Back-relations by default are resolved as multiple relation field (see the note with the caveats), meaning that similar to all other multi-valued fields (multiple `relation`, `select`, `file`) by default a "match-all" constraint is applied and if you want "any/at-least-one" type of condition then you'll have to prefix the operator with `?`.
+>
+> @ganigeorgiev in [#6080](https://github.com/pocketbase/pocketbase/discussions/6080#discussioncomment-11526411)
+
 ## Advanced Features
 
 ### Multi-Field Search
 
-```typescript
+```ts
 pbQuery<Post>()
   .search(['title', 'content', 'author.name'], 'NFT')
 // (title~'NFT' || content~'NFT' || author.name~'NFT')
@@ -263,7 +309,7 @@ pbQuery<Post>()
 
 ### Nested Object Filtering
 
-```typescript
+```ts
 pbQuery<Post>()
   .equal('user.profile.age', 30)
   .and()
@@ -273,7 +319,7 @@ pbQuery<Post>()
 
 ### Dynamic Query Building
 
-```typescript
+```ts
 function buildSearchQuery(term: string, filters: FilterOptions) {
   return pbQuery<Post>()
     .search(['title', 'content'], term)
@@ -294,7 +340,7 @@ function buildSearchQuery(term: string, filters: FilterOptions) {
 ### ⚠️ `.custom()` Warning
 
 Avoid raw SQL-like operations where possible:
-```typescript
+```ts
 // ❌ Risky
 .custom(`content LIKE '%${userInput}%'`)
 
@@ -303,14 +349,20 @@ Avoid raw SQL-like operations where possible:
 ```
 
 If you must use `.custom()`, always parameterize:
-```typescript
+```ts
 .custom(pb.filter('createdAt > {:date}', { date: safeDate }))
+```
+
+or in JSVM:
+
+```ts
+.custom($dbx.exp('createdAt > {:date}', { date: safeDate }))
 ```
 
 ### 🔧 `.build()` Best Practice
 
 **Always** use PocketBase's native filter handling:
-```typescript
+```ts
 // ✅ Recommended
 const filterString = qb.build(pb.filter);
 
@@ -322,7 +374,7 @@ const raw = qb.build().raw;
 
 ### Paginated Admin Dashboard
 
-```typescript
+```ts
 const buildAdminQuery = (
   searchTerm: string,
   options: {
@@ -346,7 +398,7 @@ const buildAdminQuery = (
 
 ### E-Commerce Product Filter
 
-```typescript
+```ts
 const productQuery = pbQuery<Product>()
   .between('price', minPrice, maxPrice)
   .and()
@@ -370,7 +422,7 @@ const productQuery = pbQuery<Product>()
 
 **Problem:** Type errors on nested paths  
 **Fix:** Use correct path modifiers:
-```typescript
+```ts
 // ❌ Fails
 .equal('categories.name', 'Tech')
 
@@ -380,7 +432,7 @@ const productQuery = pbQuery<Product>()
 
 **Problem:** Date comparisons not working  
 **Fix:** Always use Date objects:
-```typescript
+```ts
 .between('createdAt', new Date('2023-01-01'), new Date())
 ```
 
@@ -394,7 +446,7 @@ const productQuery = pbQuery<Product>()
 
 3. **Parameter reuse**  
    The builder automatically reuses parameters:
-   ```typescript
+   ```ts
    pbQuery<User>()
      .equal('city', 'London')
      .or()

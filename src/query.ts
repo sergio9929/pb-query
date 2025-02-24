@@ -13,12 +13,11 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
     MaxDepth
 > {
     let query = ''
-    let depth = 0
 
-    const keyCounter = new Map<Path<T>, number>()
+    const keyCounter = new Map<Path<T, MaxDepth>, number>()
     const valueMap = new Map<string, unknown>()
 
-    const incrementKeyCounter = (key: Path<T>) => {
+    const incrementKeyCounter = (key: Path<T, MaxDepth>) => {
         const count = keyCounter.get(key) || 0
         const newCount = count + 1
         keyCounter.set(key, newCount)
@@ -26,7 +25,10 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
         return newCount
     }
 
-    const saveValue = <P extends Path<T>>(key: P, value: PathValue<T, P>) => {
+    const saveValue = <P extends Path<T, MaxDepth>>(
+        key: P,
+        value: PathValue<T, P, MaxDepth>,
+    ) => {
         const count = incrementKeyCounter(key)
         const newName = `${String(key)}${count}`
         valueMap.set(newName, value)
@@ -34,18 +36,18 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
         return newName
     }
 
-    const expression = <P extends Path<T>>(
+    const expression = <P extends Path<T, MaxDepth>>(
         key: P,
         operator: string,
-        value: PathValue<T, P>,
+        value: PathValue<T, P, MaxDepth>,
     ) => {
         const newName = saveValue(key, value)
         query += `${String(key)}${operator}{:${newName}}`
     }
 
-    type BuilderFunction = <P extends Path<T>>(
+    type BuilderFunction = <P extends Path<T, MaxDepth>>(
         key: P,
-        values: PathValue<T, P>,
+        values: PathValue<T, P, MaxDepth>,
     ) => RestrictedQueryBuilder<T, MaxDepth>
 
     const builderFunctions = {} as Record<
@@ -54,9 +56,9 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
     >
     for (const [name, operator] of Object.entries(OPERATORS)) {
         const key = name as keyof typeof OPERATORS
-        builderFunctions[key] = <P extends Path<T>>(
+        builderFunctions[key] = <P extends Path<T, MaxDepth>>(
             key: P,
-            value: PathValue<T, P>,
+            value: PathValue<T, P, MaxDepth>,
         ) => {
             expression(key, operator, value)
             return restrictedQueryBuilder
@@ -66,10 +68,6 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
     function build(): RawQueryObject
     function build(filter: FilterFunction): string
     function build(filter?: FilterFunction): RawQueryObject | string {
-        if (depth !== 0) {
-            throw new Error('Unclosed groups')
-        }
-
         if (typeof filter === 'function') {
             return filter(query, Object.fromEntries(valueMap))
         }
@@ -134,16 +132,9 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
             query += raw
             return restrictedQueryBuilder
         },
-        open() {
-            depth++
-            query += '('
-            return queryBuilder
-        },
         group(callback) {
-            depth++
             query += '('
             callback(queryBuilder)
-            depth--
             query += ')'
             return restrictedQueryBuilder
         },
@@ -158,11 +149,6 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
         or() {
             query += ' || '
             return queryBuilder
-        },
-        close() {
-            depth--
-            query += ')'
-            return restrictedQueryBuilder
         },
         build,
     }

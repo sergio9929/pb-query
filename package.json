@@ -9,7 +9,7 @@
     "scripts": {
         "prepare": "husky",
         "build": "tsup index.ts --format cjs,esm --dts",
-        "release:build": "tsup index.ts --format cjs,esm --dts",
+        "release:build": "tsup index.ts --format cjs,esm --dts --minify",
         "release:publish": "changeset publish",
         "release": "run-s release:*",
         "lint": "biome check --write --no-errors-on-unmatched",

@@ -5,3 +5,4 @@ export type {
     RestrictedQueryBuilder,
 } from './src/types'
 export { OPERATORS } from './src/constants'
+export { filter } from './src/utils'

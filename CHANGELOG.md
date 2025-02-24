@@ -1,5 +1,11 @@
 # @sergio9929/pb-query
 
+## 0.0.4
+
+### Patch Changes
+
+- 5331920: minify release build
+
 ## 0.0.3
 
 ### Patch Changes

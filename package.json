@@ -38,8 +38,5 @@
     "bugs": {
         "url": "https://github.com/sergio9929/pb-query/issues"
     },
-    "homepage": "https://github.com/sergio9929/pb-query#readme",
-    "publishConfig": {
-        "access": "public"
-    }
+    "homepage": "https://github.com/sergio9929/pb-query#readme"
 }

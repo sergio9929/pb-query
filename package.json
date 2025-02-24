@@ -1,6 +1,6 @@
 {
     "name": "@sergio9929/pb-query",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "A type-safe PocketBase query builder",
     "main": "dist/index.js",
     "module": "dist/index.mjs",

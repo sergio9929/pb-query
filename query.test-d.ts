@@ -56,5 +56,6 @@ test('all possible keys', () => {
     equal('numbers:length', 1).build()
     equal('created', new Date()).build()
     equal('isVisible', true).build()
+    equal('user', 'hola').build()
     equal('user.age', 18).build()
 })

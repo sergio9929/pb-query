@@ -58,7 +58,11 @@ export type PathValue<
               ? string
               : T[P] extends unknown[]
                 ? T[P][number]
-                : T[P]
+                : T[P] extends Date
+                  ? T[P]
+                  : T[P] extends object
+                    ? string
+                    : T[P]
           : never
 
 export type HandleModifier<V, Modifier extends string> = Modifier extends 'each'

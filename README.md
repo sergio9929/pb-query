@@ -699,6 +699,6 @@ pbQuery<Post>().between('created', new Date('2023-01-01'), new Date());
 
 ---
 
-**@sergio9929/pb-query** is maintained by [@sergio9929](https://github.com/sergio9929) with ❤️  
-Found a bug? [Open an issue](https://github.com/your/repo/issues)  
-Want to contribute? [Read our guide](CONTRIBUTING.md)  
+**@sergio9929/pb-query** is maintained by [@sergio9929](https://github.com/sergio9929) with ❤️
+Found a bug? [Open an issue](https://github.com/sergio9929/pb-query/issues)
+Want to contribute? [Read our guide](CONTRIBUTING.md)

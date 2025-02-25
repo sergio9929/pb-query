@@ -460,9 +460,6 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * @example
      * // We recommend using Pocketbase's native `pb.filter()` function
      * const query = pbQuery<User>().equal('name', 'Alice').build(pb.filter);
-     * // or `$dbx.exp()` in JSVM
-     * const query = pbQuery<User>().equal('name', 'Alice').build($dbx.exp);
-     * console.log(query); // name='Alice'
      *
      * // You can also filter it later
      * const query = pbQuery<User>().equal('name', 'Alice').build();
@@ -494,9 +491,6 @@ export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6> {
      * @example
      * // We recommend using Pocketbase's native `pb.filter()` function
      * const query = pbQuery<User>().equal('name', 'Alice').build(pb.filter);
-     * // or `$dbx.exp()` in JSVM
-     * const query = pbQuery<User>().equal('name', 'Alice').build($dbx.exp);
-     * console.log(query); // name='Alice'
      *
      * // You can also filter it later
      * const query = pbQuery<User>().equal('name', 'Alice').build();

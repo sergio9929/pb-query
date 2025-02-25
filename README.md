@@ -30,7 +30,11 @@ yarn add @sergio9929/pb-query
 
 ## Quick Start
 
+### App
+
 ```ts
+// test.ts
+
 import { pbQuery } from '@sergio9929/pb-query';
 import PocketBase from 'pocketbase';
 import type { Post } from './types';
@@ -64,6 +68,51 @@ const records = await pb.collection("posts").getList(1, 20, {
 
 > [!IMPORTANT]
 > You can use this package without TypeScript, but you would miss out on many of its advantages.
+
+### PocketBase Hooks
+
+[Learn more](https://pocketbase.io/docs/js-overview/)
+
+```js
+// pb_hooks/test.pb.js
+
+/// <reference path="../pb_data/types.d.ts" />
+
+routerAdd("GET", "/test", (e) => {
+  const { pbQuery } = require('@sergio9929/pb-query')
+
+  const { raw, values } = pbQuery()
+    .search(['title', 'content', 'tags.title', 'author'], 'footba')
+    .and()
+    .between('created', new Date('2023-01-01'), new Date('2024-12-31'))
+    .or()
+    .group(q => 
+      q.anyLike('tags', 'sports')
+        .and()
+        .greaterThan('priority', 5)
+    )
+    .build();
+
+  try {
+    const records = $app.findRecordsByFilter(
+      "posts",
+      raw,
+      '',
+      20,
+      0,
+      values
+    )
+
+    return e.json(200, records)
+  } catch (error) {
+    console.error(error)
+
+    return e.json(404, { "message": "Not Found" })
+  }
+
+  return e.json(500, { "message": "Internal Server Error" })
+})
+```
 
 ## Table of Contents
 
@@ -201,17 +250,6 @@ const pb = new PocketBase("https://example.com");
 const query = pbQuery<Post>()
   .like('content', 'Top Secret%')
   .build(pb.filter); // use PocketBase's filter function
-
-console.log(query);  // "content~'Top Secret%'"
-```
-
-Or `$dbx.exp()` in JSVM:
-
-```ts
-// ✅ Filtered query
-const query = pbQuery<Post>()
-  .like('content', 'Top Secret%')
-  .build($dbx.exp); // use PocketBase's filter function
 
 console.log(query);  // "content~'Top Secret%'"
 ```

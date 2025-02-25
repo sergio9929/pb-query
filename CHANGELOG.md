@@ -1,5 +1,11 @@
 # @sergio9929/pb-query
 
+## 0.2.2
+
+### Patch Changes
+
+- Add documentation for PocketBase Hooks
+
 ## 0.2.1
 
 ### Patch Changes

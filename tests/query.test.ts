@@ -1,7 +1,7 @@
 import PocketBase from 'pocketbase'
 import { expect, test } from 'vitest'
-import { pbQuery } from './src/query'
-import { filter } from './src/utils'
+import { pbQuery } from '../src/query'
+import { filter } from '../src/utils'
 
 interface User {
     id: string

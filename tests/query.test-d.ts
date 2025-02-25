@@ -1,7 +1,7 @@
 import { assertType, test } from 'vitest'
-import { pbQuery } from './src/query'
-import type { RawQueryObject } from './src/types'
-import { filter } from './src/utils'
+import { pbQuery } from '../src/query'
+import type { RawQueryObject } from '../src/types'
+import { filter } from '../src/utils'
 
 interface User {
     id: string

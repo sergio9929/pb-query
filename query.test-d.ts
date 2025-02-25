@@ -21,8 +21,8 @@ interface Post {
     id: string
     title: string
     content: string
-    createdAt: Date
-    updatedAt: Date
+    created: Date
+    update: Date
     user: User
     tags: string[]
     categories: Category[]
@@ -54,7 +54,7 @@ test('all possible keys', () => {
     equal('numbers', 1).build()
     equal('numbers:each', 1).build()
     equal('numbers:length', 1).build()
-    equal('createdAt', new Date()).build()
+    equal('created', new Date()).build()
     equal('isVisible', true).build()
     equal('user.age', 18).build()
 })

@@ -378,7 +378,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Matches records where `key` is between `from` and `to`.
      * @example
      * pbQuery<User>().between('age', 18, 30); // (age>=18 && age<=30)
-     * pbQuery<User>().between('createdAt', new Date('2021-01-01'), new Date('2021-12-31')); // (createdAt>='2021-01-01' && createdAt<='2021-12-31')
+     * pbQuery<User>().between('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created>='2021-01-01' && created<='2021-12-31')
      */
     between<P extends Path<T, MaxDepth>>(
         key: P,
@@ -392,7 +392,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Matches records where `key` is between `from` and `to`.
      * @example
      * pbQuery<User>().between('age', 18, 30); // (age<18 || age>30)
-     * pbQuery<User>().between('createdAt', new Date('2021-01-01'), new Date('2021-12-31')); // (createdAt<'2021-01-01' || createdAt>'2021-12-31')
+     * pbQuery<User>().between('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created<'2021-01-01' || created>'2021-12-31')
      */
     notBetween<P extends Path<T, MaxDepth>>(
         key: P,

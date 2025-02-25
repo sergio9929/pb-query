@@ -42,7 +42,7 @@ const pb = new PocketBase("https://example.com")
 const query = pbQuery<Post>()
   .search(['title', 'content', 'tags', 'author'], 'footba')
   .and()
-  .between('createdAt', new Date('2023-01-01'), new Date('2023-12-31'))
+  .between('created', new Date('2023-01-01'), new Date('2023-12-31'))
   .or()
   .group(q => 
     q.anyLike('tags', 'sports')
@@ -53,7 +53,7 @@ const query = pbQuery<Post>()
 
 console.log(query);
 // (title~'footba' || content~'footba' || tags~'footba' || author~'footba') 
-// && (createdAt>='2023-01-01' && createdAt<='2023-12-31') 
+// && (created>='2023-01-01' && created<='2023-12-31') 
 // || ((tags?~'sports' && priority>5))
 
 // Use your query
@@ -81,7 +81,7 @@ const records = await pb.collection("posts").getList(1, 20, {
 Building complex filters in PocketBase often leads to:
 
 1. **String Concatenation Hell**  
-    `'createdAt >= "2023-01-01" && (tags ~ "%urgent%" || priority > 5)'`  
+    `'created >= "2023-01-01" && (tags ~ "%urgent%" || priority > 5)'`  
     😱 Prone to syntax errors and difficult to maintain
 
 2. **Type Safety Issues**  
@@ -483,7 +483,7 @@ Matches records where `key` is between `from` and `to`.
 
 ```ts
 pbQuery<User>().between('age', 18, 30); // (age>=18 && age<=30)
-pbQuery<User>().between('createdAt', new Date('2021-01-01'), new Date('2021-12-31')); // (createdAt>='2021-01-01' && createdAt<='2021-12-31')
+pbQuery<User>().between('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created>='2021-01-01' && created<='2021-12-31')
 ```
 
 #### `.notBetween(path, from, to)`
@@ -492,7 +492,7 @@ Matches records where `key` is between `from` and `to`.
 
 ```ts
 pbQuery<User>().between('age', 18, 30); // (age<18 || age>30)
-pbQuery<User>().between('createdAt', new Date('2021-01-01'), new Date('2021-12-31')); // (createdAt<'2021-01-01' || createdAt>'2021-12-31')
+pbQuery<User>().between('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created<'2021-01-01' || created>'2021-12-31')
 ```
 
 ### Null Checks
@@ -567,7 +567,7 @@ function buildSearchQuery(term: string, filters: FilterOptions) {
         q.anyGreaterThan('priority', 7)
       }
       if (filters.recent) {
-        q.between('createdAt', subMonths(new Date(), 1), new Date())
+        q.between('created', subMonths(new Date(), 1), new Date())
       }
       return q
     })

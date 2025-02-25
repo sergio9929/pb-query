@@ -159,7 +159,7 @@ test('nested groups', () => {
     )
 })
 
-test('back relations', () => {
+test('back-relations', () => {
     const groupTest = pbQuery<Post>()
         .equal('anything_via_author', new Date('2021-12-31'))
         .and()

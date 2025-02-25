@@ -1,5 +1,11 @@
 # @sergio9929/pb-query
 
+## 0.2.1
+
+### Patch Changes
+
+- fix typos in the docs
+
 ## 0.2.0
 
 ### Minor Changes

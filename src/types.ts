@@ -101,7 +101,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Matches records where `key` equals `value`.
      * @example
      * pbQuery<Post>().equal('author.name', 'Alice'); // name='Alice'
-     * // this is case sensitive, to make it case insensitive use the `:lower` modifier.
+     * // This is case-sensitive. Use the `:lower` modifier for case-insensitive matching.
      * pbQuery<Post>().equal('author.name:lower', 'alice'); // name:lower='alice'
      */
     equal<P extends Path<T, MaxDepth>>(
@@ -113,7 +113,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Matches records where `key` is not equal to `value`.
      * @example
      * pbQuery<Post>().notEqual('author.name', 'Alice'); // name!='Alice'
-     * // this is case sensitive, to make it case insensitive use the `:lower` modifier.
+     * // This is case-sensitive. Use the `:lower` modifier for case-insensitive matching.
      * pbQuery<Post>().notEqual('author.name:lower', 'alice'); // name:lower!='alice'
      */
     notEqual<P extends Path<T, MaxDepth>>(
@@ -160,12 +160,12 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     /**
      * Matches records where `key` contains `value`.
      *
-     * It is case insensitive, so `:lower` modifier is useless.
+     * It is case-insensitive, so the `:lower` modifier is unnecessary.
      *
      * @example
      * // Contains
      * pbQuery<Post>().like('author.name', 'Joh'); // name~'Joh' / name~'%Joh%'
-     * // If not specified auto wraps the value in a `%` for wildcard match.
+     * // If not specified, auto-wraps the value in `%` for wildcard matching.
      *
      * @example
      * // Starts with
@@ -183,12 +183,12 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     /**
      * Matches records where `key` doesn't contain `value`.
      *
-     * It is case insensitive, so `:lower` modifier is useless.
+     * It is case-insensitive, so the `:lower` modifier is unnecessary.
      *
      * @example
      * // Doesn't contain
      * pbQuery<Post>().notLike('author.name', 'Joh'); // name!~'Joh' / name!~'%Joh%'
-     * // If not specified auto wraps the value in a `%` for wildcard match.
+     * // If not specified, auto-wraps the value in `%` for wildcard matching.
      *
      * @example
      * // Doesn't start with
@@ -204,13 +204,13 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
-     * Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` equals `value`.
      * @example
      * pbQuery<Book>().anyEqual('books_via_author.title', 'The Island'); // post_via_author.name?='The Island'
      *
-     * // this is case sensitive, to make it case insensitive use the `:lower` modifier.
+     * // This is case-sensitive. Use the `:lower` modifier for case-insensitive matching.
      * pbQuery<Book>().anyEqual('books_via_author.title:lower', 'the island'); // post_via_author.name:lower?='the island'
      */
     anyEqual<P extends Path<T, MaxDepth>>(
@@ -219,13 +219,13 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
-     * Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is not equal to `value`.
      * @example
      * pbQuery<Book>().anyNotEqual('books_via_author.title', 'The Island'); // post_via_author.name?!='The Island'
      *
-     * // this is case sensitive, to make it case insensitive use the `:lower` modifier.
+     * // This is case-sensitive. Use the `:lower` modifier for case-insensitive matching.
      * pbQuery<Book>().anyNotEqual('books_via_author.title:lower', 'the island'); // post_via_author.name:lower?!='the island'
      */
     anyNotEqual<P extends Path<T, MaxDepth>>(
@@ -234,7 +234,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
-     * Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is greater than `value`.
      * @example pbQuery<User>().anyGreaterThan('age', 21); // age?>21
@@ -245,7 +245,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
-     * Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is greater than or equal to `value`.
      * @example pbQuery<User>().anyGreaterThanOrEqual('age', 18); // age?>=18
@@ -256,7 +256,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
-     * Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is less than `value`.
      * @example pbQuery<User>().anyLessThan('age', 50); // age?<50
@@ -267,7 +267,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
-     * Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is less than or equal to `value`.
      * @example pbQuery<User>().anyLessThanOrEqual('age', 65); // age?<=65
@@ -278,16 +278,16 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
-     * Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` contains `value`.
      *
-     * It is case insensitive, so `:lower` modifier is useless.
+     * It is case-insensitive, so the `:lower` modifier is unnecessary.
      *
      * @example
      * // Contains
      * pbQuery<Post>().anyLike('author.name', 'Joh'); // name?~'Joh' / name?~'%Joh%'
-     * // If not specified auto wraps the value in a `%` for wildcard match.
+     * // If not specified, auto-wraps the value in `%` for wildcard matching.
      *
      * @example
      * // Starts with
@@ -303,16 +303,16 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     ): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
-     * Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` doesn't contain `value`.
      *
-     * It is case insensitive, so `:lower` modifier is useless.
+     * It is case-insensitive, so the `:lower` modifier is unnecessary.
      *
      * @example
      * // Doesn't contain
      * pbQuery<Post>().anyNotLike('author.name', 'Joh'); // name?!~'Joh' / name?!~'%Joh%'
-     * // If not specified auto wraps the value in a `%` for wildcard match.
+     * // If not specified, auto-wraps the value in `%` for wildcard matching.
      *
      * @example
      * // Doesn't start with
@@ -332,9 +332,9 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * Matches records where any of the `keys` contain `value`.
      *
-     * It can be used to perform a full text search (fts).
+     * It can be used to perform a full-text search (FTS).
      *
-     * It is case insensitive, so `:lower` modifier is useless.
+     * It is case-insensitive, so the `:lower` modifier is unnecessary.
      *
      * @example
      * // Full text search
@@ -343,7 +343,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * @example
      * // Contains
      * pbQuery<User>().search(['name', 'surname'], 'Joh'); // (name~'Joh' || surname~'Joh') / (name~'%Joh%' || surname~'%Joh%')
-     * // If not specified auto wraps the value in a `%` for wildcard match.
+     * // If not specified, auto-wraps the value in `%` for wildcard matching.
      *
      * @example
      * // Starts with
@@ -362,7 +362,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * **_Helper_**
      *
      * Matches records where `key` is in `values`.
-     * @example pbQuery<Post>().in('id', ['id_1', 'id_2, 'id_3]); // (id='id_1' || id='id_2 || id='id_3)
+     * @example pbQuery<Post>().in('id', ['id_1', 'id_2', 'id_3']); // (id='id_1' || id='id_2' || id='id_3')
      */
     in<P extends Path<T, MaxDepth>>(
         key: P,
@@ -397,10 +397,10 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     /**
      * **_Helper_**
      *
-     * Matches records where `key` is between `from` and `to`.
+     * Matches records where `key` is not between `from` and `to`.
      * @example
-     * pbQuery<User>().between('age', 18, 30); // (age<18 || age>30)
-     * pbQuery<User>().between('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created<'2021-01-01' || created>'2021-12-31')
+     * pbQuery<User>().notBetween('age', 18, 30); // (age<18 || age>30)
+     * pbQuery<User>().notBetween('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created<'2021-01-01' || created>'2021-12-31')
      */
     notBetween<P extends Path<T, MaxDepth>>(
         key: P,

@@ -8,12 +8,12 @@
 
 ## Features
 
-- **🚀 Full TypeScript Integration** - Autocomplete keys and validate values against your schema
-- **🔗 Chainable API** - Build complex queries with `.and()`/`.or()` logic
-- **🛡️ Injection Protection** - Automatic parameter escaping
-- **🧩 Nested Grouping** - Create complex logic with `.group()`
-- **📅 Date & Array Support** - First-class handling of dates and array operations
-- **🔍 Advanced Search** - Multi-field search with single method call
+- **🚀 Full TypeScript Integration** - Autocomplete keys and validate values against your schema.
+- **🔗 Chainable API** - Build complex queries with `.and()`/`.or()` logic.
+- **🛡️ Injection Protection** - Automatic parameter escaping.
+- **🧩 Nested Grouping** - Create complex logic with `.group()`.
+- **📅 Date & Array Support** - First-class handling of dates and array operations.
+- **🔍 Advanced Search** - Multi-field search with a single method call.
 
 ## Installation
 
@@ -36,7 +36,7 @@ import PocketBase from 'pocketbase';
 import type { Post } from './types';
 
 // PocketBase instance
-const pb = new PocketBase("https://example.com")
+const pb = new PocketBase("https://example.com");
 
 // Build a type-safe query for posts
 const query = pbQuery<Post>()
@@ -54,16 +54,16 @@ const query = pbQuery<Post>()
 console.log(query);
 // (title~'footba' || content~'footba' || tags~'footba' || author~'footba') 
 // && (created>='2023-01-01' && created<='2023-12-31') 
-// || ((tags?~'sports' && priority>5))
+// || (tags?~'sports' && priority>5)
 
 // Use your query
 const records = await pb.collection("posts").getList(1, 20, {
-  filter: query
-})
+  filter: query,
+});
 ```
 
 > [!IMPORTANT]
-> You can use this package without typescript, but you would miss out on many of the advantages we offer.
+> You can use this package without TypeScript, but you would miss out on many of its advantages.
 
 ## Table of Contents
 
@@ -82,19 +82,19 @@ Building complex filters in PocketBase often leads to:
 
 1. **String Concatenation Hell**  
     `'created >= "2023-01-01" && (tags ~ "%urgent%" || priority > 5)'`  
-    😱 Prone to syntax errors and difficult to maintain
+    😱 Prone to syntax errors and difficult to maintain.
 
 2. **Type Safety Issues**  
     `'user.age > "twenty"'`  
-    😬 Incorrect value types can cause runtime errors
+    😬 Incorrect value types can cause runtime errors.
 
 3. **Typos**  
     `'user.ege > "twenty"'`  
-    😬 No type checking for field names, leading to hard-to-find bugs
+    😬 No type checking for field names, leading to hard-to-find bugs.
 
 4. **Security Risks**  
     `title ~ '${userInput}'`  
-    😨 Manual string interpolation can lead to injection attacks
+    😨 Manual string interpolation can lead to injection attacks.
 
 **pb-query solves all this:**  
 ```ts
@@ -102,7 +102,7 @@ pbQuery<Post>()
   .greaterThan('user.age', 25) // Type-checked age
   .and()
   .like('title', `${safeUserInput}`) // Automatic escaping
-  .build(pb.filter)
+  .build(pb.filter);
 ```
 
 ### Code Suggestions and JSDoc
@@ -111,20 +111,20 @@ Documentation directly in your IDE.
 
 ![JSDoc](docs/jsdoc.png)
 
-Leveraging the power of typescript we can give suggestions based on your schema.
+Leveraging the power of TypeScript, we provide suggestions based on your schema.
 
 ![Field name suggestions](docs/field%20name%20suggestions.png)
 
 ## Core Concepts
 
-### Building the query
+### Building the Query
 
-The query returns using `.build()`.
+The query is finalized using `.build()`.
 
 ```ts
 // ❌ Wrong
 const query = pbQuery<Post>()
-  .like('content', 'Top Secret%')
+  .like('content', 'Top Secret%');
 
 console.log(query);  // object with functions
 ```
@@ -138,54 +138,51 @@ const query = pbQuery<Post>()
 console.log(query);  // { raw: 'content~{:content1}', values: { content1: 'Top Secret%' } }
 ```
 
-You can use this principle to create dynamic queries
+You can use this principle to create dynamic queries:
 
 ```ts
 const dynamicQuery = pbQuery<Post>()
-  .like('content', 'Top Secret%')
+  .like('content', 'Top Secret%');
 
 if (user) {
-  dynamicQuery.and().equal('author', user.id)
+  dynamicQuery.and().equal('author', user.id);
 }
 
-const query = dynamicQuery.build()
+const query = dynamicQuery.build();
 ```
 
-or declare a global query builder for a specific schema.
+Or declare global query builders for a specific schemas:
 
 ```ts
 // queries.ts
-
-export const queryUsers = pbQuery<User>()
-export const queryPosts = pbQuery<Post>()
+export const queryUsers = pbQuery<User>();
+export const queryPosts = pbQuery<Post>();
 ```
 
 ```ts
 // pages/posts.ts
-
 import PocketBase from 'pocketbase';
 
 // PocketBase instance
-const pb = new PocketBase("https://example.com")
+const pb = new PocketBase("https://example.com");
 
 const query = queryPosts
   .search('content', 'Top Secret%')
   .build(pb.filter); // use PocketBase's filter function
 
 const records = await pb.collection("posts").getList(1, 20, {
-  filter: query
-})
-
+  filter: query,
+});
 ```
 
 ### Parameter Safety
 
-We don't filter your query by default, so by just using `.build()` you will get the unfiltered query and the values separatelly.
+By default, we don't filter your query. Using `.build()` returns the unfiltered query and values separately.
 
 ```ts
 // ❌ Unfiltered query
 const { raw, values } = pbQuery<Post>()
-  .search(['title', 'content', 'tags', 'author.name', 'author.surname'], 'Football');
+  .search(['title', 'content', 'tags', 'author.name', 'author.surname'], 'Football')
   .build();
 
 console.log(raw);    // "content~{:content1}"
@@ -198,7 +195,7 @@ We expose a filter function, but we recommend using the native `pb.filter()` fun
 import PocketBase from 'pocketbase';
 
 // PocketBase instance
-const pb = new PocketBase("https://example.com")
+const pb = new PocketBase("https://example.com");
 
 // ✅ Filtered query
 const query = pbQuery<Post>()
@@ -208,7 +205,7 @@ const query = pbQuery<Post>()
 console.log(query);  // "content~'Top Secret%'"
 ```
 
-or `$dbx.exp()` in JSVM:
+Or `$dbx.exp()` in JSVM:
 
 ```ts
 // ✅ Filtered query
@@ -227,7 +224,7 @@ Native PocketBase query modifiers.
 pbQuery<Post>()
   .equal('title:lower', 'hello world') // Case-insensitive (not needed for .like() operators)
   .equal('tags:length', 5) // If array length equals 5
-  .equal('tags:each', 'Tech') // If every array element equals'Tech'
+  .equal('tags:each', 'Tech'); // If every array element equals 'Tech'
 ```
 
 ## Basic Operators
@@ -239,9 +236,9 @@ pbQuery<Post>()
 Matches records where `key` equals `value`.
 
 ```ts
-pbQuery<Post>.equal('author.name', 'Alice'); // name='Alice'
-// this is case sensitive, to make it case insensitive use the `:lower` modifier.
-pbQuery<Post>.equal('author.name:lower', 'alice'); // name:lower='alice'
+pbQuery<Post>().equal('author.name', 'Alice'); // name='Alice'
+// This is case-sensitive. Use the `:lower` modifier for case-insensitive matching.
+pbQuery<Post>().equal('author.name:lower', 'alice'); // name:lower='alice'
 ```
 
 #### `.notEqual(key, value)`
@@ -249,9 +246,9 @@ pbQuery<Post>.equal('author.name:lower', 'alice'); // name:lower='alice'
 Matches records where `key` is not equal to `value`.
 
 ```ts
-pbQuery<Post>.notEqual('author.name', 'Alice'); // name!='Alice'
-// this is case sensitive, to make it case insensitive use the `:lower` modifier.
-pbQuery<Post>.notEqual('author.name:lower', 'alice'); // name:lower!='alice'
+pbQuery<Post>().notEqual('author.name', 'Alice'); // name!='Alice'
+// This is case-sensitive. Use the `:lower` modifier for case-insensitive matching.
+pbQuery<Post>().notEqual('author.name:lower', 'alice'); // name:lower!='alice'
 ```
 
 ### Comparisons
@@ -294,12 +291,12 @@ pbQuery<User>().lessThanOrEqual('age', 65); // age<=65
 
 Matches records where `key` contains `value`.
 
-It is case insensitive, so `:lower` modifier is useless.
+It is case-insensitive, so the `:lower` modifier is unnecessary.
 
 ```ts
 // Contains
 pbQuery<Post>().like('author.name', 'Joh'); // name~'Joh' / name~'%Joh%'
-// If not specified auto wraps the value in a `%` for wildcard match.
+// If not specified, auto-wraps the value in `%` for wildcard matching.
 ```
 
 ```ts
@@ -316,12 +313,12 @@ pbQuery<Post>().like('author.name', '%Doe'); // name~'%Doe'
 
 Matches records where `key` doesn't contain `value`.
 
-It is case insensitive, so `:lower` modifier is useless.
+It is case-insensitive, so the `:lower` modifier is unnecessary.
 
 ```ts
 // Doesn't contain
 pbQuery<Post>().notLike('author.name', 'Joh'); // name!~'Joh' / name!~'%Joh%'
-// If not specified auto wraps the value in a `%` for wildcard match.
+// If not specified, auto-wraps the value in `%` for wildcard matching.
 ```
 
 ```ts
@@ -368,21 +365,19 @@ pbQuery<Post>().group(q => q.equal('status', 'active').or().equal('status', 'ina
 
 ### Any Queries (Any/At least one of)
 
-Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
 
 Return all authors who have published at least one book about "Harry Potter":
 
 ```ts
-pbQuery<Book>.anyLike('books_via_author.title', 'Harry Potter'); // post_via_author.name?~'Harry Potter'
+pbQuery<Book>().anyLike('books_via_author.title', 'Harry Potter'); // post_via_author.name?~'Harry Potter'
 ```
 
 Return all authors who have only published books about "Harry Potter":
 
 ```ts
-pbQuery<Book>.like('books_via_author.title', 'Harry Potter'); // post_via_author.name~'Harry Potter'
+pbQuery<Book>().like('books_via_author.title', 'Harry Potter'); // post_via_author.name~'Harry Potter'
 ```
-
-Returns all the authors who have published 
 
 > [!NOTE]
 > Back-relations by default are resolved as multiple relation field (see the note with the caveats), meaning that similar to all other multi-valued fields (multiple `relation`, `select`, `file`) by default a "match-all" constraint is applied and if you want "any/at-least-one" type of condition then you'll have to prefix the operator with `?`.
@@ -396,7 +391,7 @@ Matches records where at least one of the values in the given `key` equals `valu
 ```ts
 pbQuery<Book>().anyEqual('books_via_author.title', 'The Island'); // post_via_author.name?='The Island'
 
-// this is case sensitive, to make it case insensitive use the `:lower` modifier.
+// This is case-sensitive. Use the `:lower` modifier for case-insensitive matching.
 pbQuery<Book>().anyEqual('books_via_author.title:lower', 'the island'); // post_via_author.name:lower?='the island'
 ```
 
@@ -407,7 +402,7 @@ Matches records where at least one of the values in the given `key` is not equal
 ```ts
 pbQuery<Book>().anyNotEqual('books_via_author.title', 'The Island'); // post_via_author.name?!='The Island'
 
-// this is case sensitive, to make it case insensitive use the `:lower` modifier.
+// This is case-sensitive. Use the `:lower` modifier for case-insensitive matching.
 pbQuery<Book>().anyNotEqual('books_via_author.title:lower', 'the island'); // post_via_author.name:lower?!='the island'
 ```
 
@@ -447,12 +442,12 @@ pbQuery<User>().anyLessThanOrEqual('age', 65); // age?<=65
 
 Matches records where at least one of the values in the given `key` contains `value`.
 
-It is case insensitive, so `:lower` modifier is useless.
+It is case-insensitive, so the `:lower` modifier is unnecessary.
 
 ```ts
 // Contains
 pbQuery<Post>().anyLike('author.name', 'Joh'); // name?~'Joh' / name?~'%Joh%'
-// If not specified auto wraps the value in a `%` for wildcard match.
+// If not specified, auto-wraps the value in `%` for wildcard matching.
 ```
 
 ```ts
@@ -469,12 +464,12 @@ pbQuery<Post>().anyLike('author.name', '%Doe'); // name?~'%Doe'
 
 Matches records where at least one of the values in the given `key` doesn't contain `value`.
 
-It is case insensitive, so `:lower` modifier is useless.
+It is case-insensitive, so the `:lower` modifier is unnecessary.
 
 ```ts
 // Doesn't contain
 pbQuery<Post>().anyNotLike('author.name', 'Joh'); // name?!~'Joh' / name?!~'%Joh%'
-// If not specified auto wraps the value in a `%` for wildcard match.
+// If not specified, auto-wraps the value in `%` for wildcard matching.
 ```
 
 ```ts
@@ -495,19 +490,19 @@ pbQuery<Post>().anyNotLike('author.name', '%Doe'); // name?!~'%Doe'
 
 Matches records where any of the `keys` contain `value`.
 
-It can be used to perform a full text search (fts).
+It can be used to perform a full-text search (FTS).
 
-It is case insensitive, so `:lower` modifier is useless.
+It is case-insensitive, so the `:lower` modifier is unnecessary.
 
 ```ts
-// Full text search
+// Full-text search
 pbQuery<Post>().search(['title', 'content', 'tags', 'author.name', 'author.surname'], 'Football'); // (title~'Football' || content~'Football' || tags~'Football' || author.name~'Football' || author.surname~'Football')
 ```
 
 ```ts
 // Contains
 pbQuery<User>().search(['name', 'surname'], 'Joh'); // (name~'Joh' || surname~'Joh') / (name~'%Joh%' || surname~'%Joh%')
-// If not specified auto wraps the value in a `%` for wildcard match.
+// If not specified, auto-wraps the value in `%` for wildcard matching.
 ```
 
 ```ts
@@ -525,18 +520,18 @@ pbQuery<User>().search(['name', 'surname'], '%Doe'); // (name~'%Doe' || surname~
 Matches records where `key` is in `values`.
 
 ```ts
-pbQuery<Post>().in('id', ['id_1', 'id_2, 'id_3]); // (id='id_1' || id='id_2 || id='id_3)
+pbQuery<Post>().in('id', ['id_1', 'id_2', 'id_3']); // (id='id_1' || id='id_2' || id='id_3')
 ```
 
 #### `.notIn(key, values)`
 
 Matches records where `key` is not in `values`.
 
-### Ranges
-
 ```ts
 pbQuery<User>().notIn('age', [18, 21, 30]); // (age!=18 && age!=21 && age!=30)
 ```
+
+### Ranges
 
 #### `.between(key, from, to)`
 
@@ -549,11 +544,11 @@ pbQuery<User>().between('created', new Date('2021-01-01'), new Date('2021-12-31'
 
 #### `.notBetween(key, from, to)`
 
-Matches records where `key` is between `from` and `to`.
+Matches records where `key` is not between `from` and `to`.
 
 ```ts
-pbQuery<User>().between('age', 18, 30); // (age<18 || age>30)
-pbQuery<User>().between('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created<'2021-01-01' || created>'2021-12-31')
+pbQuery<User>().notBetween('age', 18, 30); // (age<18 || age>30)
+pbQuery<User>().notBetween('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created<'2021-01-01' || created>'2021-12-31')
 ```
 
 ### Null Checks
@@ -582,9 +577,9 @@ pbQuery<User>().isNotNull('name'); // name!=''
 const buildAdminQuery = (
   searchTerm: string,
   options: {
-    minLogins: number
-    roles: string[]
-    statuses: string[]
+    minLogins: number;
+    roles: string[];
+    statuses: string[];
   }
 ) => pbQuery<User>()
   .search(['name', 'email', 'department'], searchTerm)
@@ -597,7 +592,7 @@ const buildAdminQuery = (
     q.in('status', options.statuses)
       .or()
       .isNull('status')
-  )
+  );
 ```
 
 ### E-Commerce Product Filter
@@ -614,7 +609,7 @@ const productQuery = pbQuery<Product>()
     q.equal('color', selectedColor)
       .or()
       .isNotNull('customizationOptions')
-  )
+  );
 ```
 
 ### Dynamic Query Building
@@ -625,13 +620,13 @@ function buildSearchQuery(term: string, filters: FilterOptions) {
     .search(['title', 'content'], term)
     .group(q => {
       if (filters.urgent) {
-        q.anyGreaterThan('priority', 7)
+        q.anyGreaterThan('priority', 7);
       }
       if (filters.recent) {
-        q.between('created', subMonths(new Date(), 1), new Date())
+        q.between('created', subMonths(new Date(), 1), new Date());
       }
-      return q
-    })
+      return q;
+    });
 }
 ```
 
@@ -642,15 +637,15 @@ function buildSearchQuery(term: string, filters: FilterOptions) {
 **Problem:** Date comparisons not working  
 **Fix:** Always use Date objects:
 ```ts
-pbQuery<Post>().between('created', new Date('2023-01-01'), new Date())
+pbQuery<Post>().between('created', new Date('2023-01-01'), new Date());
 ```
 
 ### Performance Tips
 
-1. **Set Max Depth for typescript**  
-    By default we infer types up to 6 levels deep. You can change this for each query.
+1. **Set Max Depth for TypeScript**  
+    By default, we infer types up to 6 levels deep. You can change this for each query.
 
-    This for example is 3 levels deep.
+    For example, this is 3 levels deep:
 
     ```ts
     // author.info.age
@@ -660,7 +655,7 @@ pbQuery<Post>().between('created', new Date('2023-01-01'), new Date())
     pbQuery<Post, 3>()
       .equal('author.info.age', 30)
       .and()
-      .like('author.email', '%@example.com')
+      .like('author.email', '%@example.com');
     // author.info.age=30 && author.email~'%@example.com'
     ```
 

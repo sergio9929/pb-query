@@ -1,5 +1,18 @@
 # @sergio9929/pb-query
 
+## 0.2.0
+
+### Minor Changes
+
+- 02be476: Add support for back relations and improve docs
+
+  - Add support for back relations.
+  - improve docks.
+
+  - Rename `createdAt` to `created`.
+  - Rename `updatedAt` to `updated`.
+  - Fix relation field types.
+
 ## 0.1.1
 
 ### Patch Changes

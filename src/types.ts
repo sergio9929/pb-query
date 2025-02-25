@@ -33,6 +33,8 @@ export type Path<
                   ?
                         | `${K}`
                         | `${K}.${Path<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+                        | `${string}_via_${K}`
+                        | `${string}_via_${K}.${string}`
                   : `${K}`
       : never
 
@@ -43,27 +45,29 @@ export type PathValue<
     D extends number = 0,
 > = D extends MaxDepth
     ? never
-    : P extends `${infer Key}.${infer Rest}`
-      ? Key extends keyof T
-          ? T[Key] extends readonly (infer E)[]
-              ? PathValue<E, Rest, MaxDepth, DepthCounter[D]> // If it's an array, continue resolving on its elements
-              : PathValue<T[Key], Rest, MaxDepth, DepthCounter[D]> // Otherwise, continue resolving normally
-          : never
-      : P extends `${infer Key}:${infer Modifier}`
+    : P extends `${infer _Prefix}_via_${infer _Suffix}`
+      ? unknown
+      : P extends `${infer Key}.${infer Rest}`
         ? Key extends keyof T
-            ? HandleModifier<T[Key], Modifier>
+            ? T[Key] extends readonly (infer E)[]
+                ? PathValue<E, Rest, MaxDepth, DepthCounter[D]> // If it's an array, continue resolving on its elements
+                : PathValue<T[Key], Rest, MaxDepth, DepthCounter[D]> // Otherwise, continue resolving normally
             : never
-        : P extends keyof T
-          ? T[P] extends object[]
-              ? string
-              : T[P] extends unknown[]
-                ? T[P][number]
-                : T[P] extends Date
-                  ? T[P]
-                  : T[P] extends object
-                    ? string
-                    : T[P]
-          : never
+        : P extends `${infer Key}:${infer Modifier}`
+          ? Key extends keyof T
+              ? HandleModifier<T[Key], Modifier>
+              : never
+          : P extends keyof T
+            ? T[P] extends object[]
+                ? string
+                : T[P] extends unknown[]
+                  ? T[P][number]
+                  : T[P] extends Date
+                    ? T[P]
+                    : T[P] extends object
+                      ? string
+                      : T[P]
+            : never
 
 export type HandleModifier<V, Modifier extends string> = Modifier extends 'each'
     ? V extends number[]

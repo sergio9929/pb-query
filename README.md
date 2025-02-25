@@ -1,5 +1,3 @@
-Here's the updated `README.md` with all the JSDoc knowledge integrated into the documentation:
-
 # pb-query 🔍✨
 
 **Build type-safe PocketBase queries with the power of TypeScript.**  
@@ -588,13 +586,7 @@ pbQuery<Post>().between('created', new Date('2023-01-01'), new Date())
 
 ### Performance Tips
 
-1. **Batch array filters**  
-    Use `.in()` instead of multiple `.or()` conditions.
-
-2. **Leverage search indexes**  
-    Combine `.search()` with PocketBase column indexes.
-
-3. **Set Max Depth for typescript**  
+1. **Set Max Depth for typescript**  
     By default we infer types up to 6 levels deep. You can change this for each query.
 
     This for example is 3 levels deep.

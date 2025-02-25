@@ -1,5 +1,11 @@
 # @sergio9929/pb-query
 
+## 0.1.1
+
+### Patch Changes
+
+- remove chatgpt crap from readme
+
 ## 0.1.0
 
 ### Minor Changes

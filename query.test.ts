@@ -128,10 +128,33 @@ test('multiple queries', () => {
         .or()
         .equal('name', 'Bob')
         .and()
-        .group((qb) => qb.equal('name', 'Alice').or().equal('name', 'Bob'))
+        .group((q) => q.equal('name', 'Alice').or().equal('name', 'Bob'))
         .build(filter)
 
     expect(groupTest).toBe(
         "name='Alice' || name='Bob' && (name='Alice' || name='Bob')",
+    )
+})
+
+test('nested groups', () => {
+    const groupTest = pbQuery<User>()
+        .equal('name', 'Alice')
+        .or()
+        .equal('name', 'Bob')
+        .and()
+        .group((q) => q.equal('name', 'Alice').or().equal('name', 'Bob'))
+        .and()
+        .group((q) =>
+            q
+                .isNotNull('name')
+                .and()
+                .group((q) =>
+                    q.equal('name', 'Alice').or().equal('name', 'Bob'),
+                ),
+        )
+        .build(filter)
+
+    expect(groupTest).toBe(
+        "name='Alice' || name='Bob' && (name='Alice' || name='Bob') && (name!='' && (name='Alice' || name='Bob'))",
     )
 })

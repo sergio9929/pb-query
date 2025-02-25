@@ -92,9 +92,9 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     /**
      * Matches records where `key` equals `value`.
      * @example
-     * pbQuery<Post>.equal('author.name', 'Alice'); // name='Alice'
+     * pbQuery<Post>().equal('author.name', 'Alice'); // name='Alice'
      * // this is case sensitive, to make it case insensitive use the `:lower` modifier.
-     * pbQuery<Post>.equal('author.name:lower', 'alice'); // name:lower='alice'
+     * pbQuery<Post>().equal('author.name:lower', 'alice'); // name:lower='alice'
      */
     equal<P extends Path<T, MaxDepth>>(
         key: P,
@@ -104,9 +104,9 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     /**
      * Matches records where `key` is not equal to `value`.
      * @example
-     * pbQuery<Post>.notEqual('author.name', 'Alice'); // name!='Alice'
+     * pbQuery<Post>().notEqual('author.name', 'Alice'); // name!='Alice'
      * // this is case sensitive, to make it case insensitive use the `:lower` modifier.
-     * pbQuery<Post>.notEqual('author.name:lower', 'alice'); // name:lower!='alice'
+     * pbQuery<Post>().notEqual('author.name:lower', 'alice'); // name:lower!='alice'
      */
     notEqual<P extends Path<T, MaxDepth>>(
         key: P,
@@ -115,7 +115,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
     /**
      * Matches records where `key` is greater than `value`.
-     * @example pbQuery<User>.greaterThan('age', 21); // age>21
+     * @example pbQuery<User>().greaterThan('age', 21); // age>21
      */
     greaterThan<P extends Path<T, MaxDepth>>(
         key: P,
@@ -124,7 +124,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
     /**
      * Matches records where `key` is greater than or equal to `value`.
-     * @example pbQuery<User>.greaterThanOrEqual('age', 18); // age>=18
+     * @example pbQuery<User>().greaterThanOrEqual('age', 18); // age>=18
      */
     greaterThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
@@ -133,7 +133,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
     /**
      * Matches records where `key` is less than `value`.
-     * @example pbQuery<User>.lessThan('age', 50); // age<50
+     * @example pbQuery<User>().lessThan('age', 50); // age<50
      */
     lessThan<P extends Path<T, MaxDepth>>(
         key: P,
@@ -142,7 +142,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
     /**
      * Matches records where `key` is less than or equal to `value`.
-     * @example pbQuery<User>.lessThanOrEqual('age', 65); // age<=65
+     * @example pbQuery<User>().lessThanOrEqual('age', 65); // age<=65
      */
     lessThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
@@ -156,16 +156,16 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * @example
      * // Contains
-     * pbQuery<Post>.like('author.name', 'Joh'); // name~'Joh' / name~'%Joh%'
+     * pbQuery<Post>().like('author.name', 'Joh'); // name~'Joh' / name~'%Joh%'
      * // If not specified auto wraps the value in a `%` for wildcard match.
      *
      * @example
      * // Starts with
-     * pbQuery<Post>.like('author.name', 'Joh%'); // name~'Joh%'
+     * pbQuery<Post>().like('author.name', 'Joh%'); // name~'Joh%'
      *
      * @example
      * // Ends with
-     * pbQuery<Post>.like('author.name', '%Doe'); // name~'%Doe'
+     * pbQuery<Post>().like('author.name', '%Doe'); // name~'%Doe'
      */
     like<P extends Path<T, MaxDepth>>(
         key: P,
@@ -179,16 +179,16 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * @example
      * // Doesn't contain
-     * pbQuery<Post>.notLike('author.name', 'Joh'); // name!~'Joh' / name!~'%Joh%'
+     * pbQuery<Post>().notLike('author.name', 'Joh'); // name!~'Joh' / name!~'%Joh%'
      * // If not specified auto wraps the value in a `%` for wildcard match.
      *
      * @example
      * // Doesn't start with
-     * pbQuery<Post>.notLike('author.name', 'Joh%'); // name!~'Joh%'
+     * pbQuery<Post>().notLike('author.name', 'Joh%'); // name!~'Joh%'
      *
      * @example
      * // Doesn't end with
-     * pbQuery<Post>.notLike('author.name', '%Doe'); // name!~'%Doe'
+     * pbQuery<Post>().notLike('author.name', '%Doe'); // name!~'%Doe'
      */
     notLike<P extends Path<T, MaxDepth>>(
         key: P,
@@ -200,10 +200,10 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * Matches records where at least one of the values in the given `key` equals `value`.
      * @example
-     * pbQuery<Book>.anyEqual('books_via_author.title', 'The Island'); // post_via_author.name?='The Island'
+     * pbQuery<Book>().anyEqual('books_via_author.title', 'The Island'); // post_via_author.name?='The Island'
      *
      * // this is case sensitive, to make it case insensitive use the `:lower` modifier.
-     * pbQuery<Book>.anyEqual('books_via_author.title:lower', 'the island'); // post_via_author.name:lower?='the island'
+     * pbQuery<Book>().anyEqual('books_via_author.title:lower', 'the island'); // post_via_author.name:lower?='the island'
      */
     anyEqual<P extends Path<T, MaxDepth>>(
         key: P,
@@ -215,10 +215,10 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * Matches records where at least one of the values in the given `key` is not equal to `value`.
      * @example
-     * pbQuery<Book>.anyNotEqual('books_via_author.title', 'The Island'); // post_via_author.name?!='The Island'
+     * pbQuery<Book>().anyNotEqual('books_via_author.title', 'The Island'); // post_via_author.name?!='The Island'
      *
      * // this is case sensitive, to make it case insensitive use the `:lower` modifier.
-     * pbQuery<Book>.anyNotEqual('books_via_author.title:lower', 'the island'); // post_via_author.name:lower?!='the island'
+     * pbQuery<Book>().anyNotEqual('books_via_author.title:lower', 'the island'); // post_via_author.name:lower?!='the island'
      */
     anyNotEqual<P extends Path<T, MaxDepth>>(
         key: P,
@@ -229,7 +229,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is greater than `value`.
-     * @example pbQuery<User>.anyGreaterThan('age', 21); // age?>21
+     * @example pbQuery<User>().anyGreaterThan('age', 21); // age?>21
      */
     anyGreaterThan<P extends Path<T, MaxDepth>>(
         key: P,
@@ -240,7 +240,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is greater than or equal to `value`.
-     * @example pbQuery<User>.anyGreaterThanOrEqual('age', 18); // age?>=18
+     * @example pbQuery<User>().anyGreaterThanOrEqual('age', 18); // age?>=18
      */
     anyGreaterThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
@@ -251,7 +251,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is less than `value`.
-     * @example pbQuery<User>.anyLessThan('age', 50); // age?<50
+     * @example pbQuery<User>().anyLessThan('age', 50); // age?<50
      */
     anyLessThan<P extends Path<T, MaxDepth>>(
         key: P,
@@ -262,7 +262,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Useful for queries that involve [back relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield) or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is less than or equal to `value`.
-     * @example pbQuery<User>.anyLessThanOrEqual('age', 65); // age?<=65
+     * @example pbQuery<User>().anyLessThanOrEqual('age', 65); // age?<=65
      */
     anyLessThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
@@ -278,16 +278,16 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * @example
      * // Contains
-     * pbQuery<Post>.anyLike('author.name', 'Joh'); // name?~'Joh' / name?~'%Joh%'
+     * pbQuery<Post>().anyLike('author.name', 'Joh'); // name?~'Joh' / name?~'%Joh%'
      * // If not specified auto wraps the value in a `%` for wildcard match.
      *
      * @example
      * // Starts with
-     * pbQuery<Post>.anyLike('author.name', 'Joh%'); // name?~'Joh%'
+     * pbQuery<Post>().anyLike('author.name', 'Joh%'); // name?~'Joh%'
      *
      * @example
      * // Ends with
-     * pbQuery<Post>.anyLike('author.name', '%Doe'); // name?~'%Doe'
+     * pbQuery<Post>().anyLike('author.name', '%Doe'); // name?~'%Doe'
      */
     anyLike<P extends Path<T, MaxDepth>>(
         key: P,
@@ -303,16 +303,16 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * @example
      * // Doesn't contain
-     * pbQuery<Post>.anyNotLike('author.name', 'Joh'); // name?!~'Joh' / name?!~'%Joh%'
+     * pbQuery<Post>().anyNotLike('author.name', 'Joh'); // name?!~'Joh' / name?!~'%Joh%'
      * // If not specified auto wraps the value in a `%` for wildcard match.
      *
      * @example
      * // Doesn't start with
-     * pbQuery<Post>.anyNotLike('author.name', 'Joh%'); // name?!~'Joh%'
+     * pbQuery<Post>().anyNotLike('author.name', 'Joh%'); // name?!~'Joh%'
      *
      * @example
      * // Doesn't end with
-     * pbQuery<Post>.anyNotLike('author.name', '%Doe'); // name?!~'%Doe'
+     * pbQuery<Post>().anyNotLike('author.name', '%Doe'); // name?!~'%Doe'
      */
     anyNotLike<P extends Path<T, MaxDepth>>(
         key: P,
@@ -330,20 +330,20 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * @example
      * // Full text search
-     * pbQuery<Post>.search(['title', 'content', 'tags', 'author.name', 'author.surname'], 'Football'); // (title~'Football' || content~'Football' || tags~'Football' || author.name~'Football' || author.surname~'Football')
+     * pbQuery<Post>().search(['title', 'content', 'tags', 'author.name', 'author.surname'], 'Football'); // (title~'Football' || content~'Football' || tags~'Football' || author.name~'Football' || author.surname~'Football')
      *
      * @example
      * // Contains
-     * pbQuery<User>.search(['name', 'surname'], 'Joh'); // (name~'Joh' || surname~'Joh') / (name~'%Joh%' || surname~'%Joh%')
+     * pbQuery<User>().search(['name', 'surname'], 'Joh'); // (name~'Joh' || surname~'Joh') / (name~'%Joh%' || surname~'%Joh%')
      * // If not specified auto wraps the value in a `%` for wildcard match.
      *
      * @example
      * // Starts with
-     * pbQuery<User>.search(['name', 'surname'], 'Joh%'); // (name~'Joh%' || surname~'Joh%')
+     * pbQuery<User>().search(['name', 'surname'], 'Joh%'); // (name~'Joh%' || surname~'Joh%')
      *
      * @example
      * // Ends with
-     * pbQuery<User>.search(['name', 'surname'], '%Doe'); // (name~'%Doe' || surname~'%Doe')
+     * pbQuery<User>().search(['name', 'surname'], '%Doe'); // (name~'%Doe' || surname~'%Doe')
      */
     search<P extends Path<T, MaxDepth>>(
         keys: P[],
@@ -354,7 +354,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * **_Helper_**
      *
      * Matches records where `key` is in `values`.
-     * @example pbQuery<Post>.in('id', ['id_1', 'id_2, 'id_3]); // (id='id_1' || id='id_2 || id='id_3)
+     * @example pbQuery<Post>().in('id', ['id_1', 'id_2, 'id_3]); // (id='id_1' || id='id_2 || id='id_3)
      */
     in<P extends Path<T, MaxDepth>>(
         key: P,
@@ -365,7 +365,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * **_Helper_**
      *
      * Matches records where `key` is not in `values`.
-     * @example pbQuery<User>.notIn('age', [18, 21, 30]); // (age!=18 && age!=21 && age!=30)
+     * @example pbQuery<User>().notIn('age', [18, 21, 30]); // (age!=18 && age!=21 && age!=30)
      */
     notIn<P extends Path<T, MaxDepth>>(
         key: P,
@@ -377,8 +377,8 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * Matches records where `key` is between `from` and `to`.
      * @example
-     * pbQuery<User>.between('age', 18, 30); // (age>=18 && age<=30)
-     * pbQuery<User>.between('createdAt', new Date('2021-01-01'), new Date('2021-12-31')); // (createdAt>='2021-01-01' && createdAt<='2021-12-31')
+     * pbQuery<User>().between('age', 18, 30); // (age>=18 && age<=30)
+     * pbQuery<User>().between('createdAt', new Date('2021-01-01'), new Date('2021-12-31')); // (createdAt>='2021-01-01' && createdAt<='2021-12-31')
      */
     between<P extends Path<T, MaxDepth>>(
         key: P,
@@ -391,8 +391,8 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * Matches records where `key` is between `from` and `to`.
      * @example
-     * pbQuery<User>.between('age', 18, 30); // (age<18 || age>30)
-     * pbQuery<User>.between('createdAt', new Date('2021-01-01'), new Date('2021-12-31')); // (createdAt<'2021-01-01' || createdAt>'2021-12-31')
+     * pbQuery<User>().between('age', 18, 30); // (age<18 || age>30)
+     * pbQuery<User>().between('createdAt', new Date('2021-01-01'), new Date('2021-12-31')); // (createdAt<'2021-01-01' || createdAt>'2021-12-31')
      */
     notBetween<P extends Path<T, MaxDepth>>(
         key: P,
@@ -404,7 +404,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * **_Helper_**
      *
      * Matches records where `key` is null.
-     * @example pbQuery<User>.isNull('name'); // name=''
+     * @example pbQuery<User>().isNull('name'); // name=''
      */
     isNull<P extends Path<T, MaxDepth>>(
         key: P,
@@ -414,7 +414,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * **_Helper_**
      *
      * Matches records where `key` is not null.
-     * @example pbQuery<User>.isNotNull('name'); // name!=''
+     * @example pbQuery<User>().isNotNull('name'); // name!=''
      */
     isNotNull<P extends Path<T, MaxDepth>>(
         key: P,
@@ -430,16 +430,16 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * If you have a special use case that might be useful to other developers, consider [opening an issue](https://github.com/sergio9929/pb-query/issues), and we may implement it as a new _helper_ in the future.
      *
      * @example
-     * pbQuery<User>.custom('age > 21'); // age > 21
+     * pbQuery<User>().custom('age > 21'); // age > 21
      *
      * // We recommend using Pocketbase's native `pb.filter()` function
-     * pbQuery<User>.custom(pb.filter('age > {:age}', { age: 21 })); // age > 21
+     * pbQuery<User>().custom(pb.filter('age > {:age}', { age: 21 })); // age > 21
      */
     custom(raw: string): RestrictedQueryBuilder<T, MaxDepth>
 
     /**
      * Creates a logical group.
-     * @example pbQuery<User>.group(q => q.equal('status', 'active').or().equal('status', 'inactive'));
+     * @example pbQuery<Post>().group(q => q.equal('status', 'active').or().equal('status', 'inactive')); // (status~'active' || status~'inactive')
      */
     group(
         callback: (
@@ -451,13 +451,13 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Returns the query string and values.
      * @example
      * // We recommend using Pocketbase's native `pb.filter()` function
-     * const query = pbQuery<User>.equal('name', 'Alice').build(pb.filter);
+     * const query = pbQuery<User>().equal('name', 'Alice').build(pb.filter);
      * // or `$dbx.exp()` in JSVM
-     * const query = pbQuery<User>.equal('name', 'Alice').build($dbx.exp);
+     * const query = pbQuery<User>().equal('name', 'Alice').build($dbx.exp);
      * console.log(query); // name='Alice'
      *
      * // You can also filter it later
-     * const query = qb.equal('name', 'Alice').build();
+     * const query = pbQuery<User>().equal('name', 'Alice').build();
      * console.log(query.raw); // name={:name1}
      * console.log(query.values); // { name: 'Alice' }
      * console.log(pb.filter(query.raw, query.values)); // name='Alice'
@@ -471,13 +471,13 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
 export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6> {
     /**
-     * Combines the current condition with an AND.
-     * @example qb.equal('name', 'Alice').and().greaterThan('age', 21);
+     * Combines the previous and the next conditions with an `and` logical operator.
+     * @example pbQuery<User>().equal('name', 'Alice').and().equal('role', 'admin'); // name='Alice' && role='admin'
      */
     and(): Omit<QueryBuilder<T, MaxDepth>, 'build'>
     /**
-     * Combines the current condition with an `OR`.
-     * @example qb.equal('name', 'Alice').or().equal('name', 'Bob');
+     * Combines the previous and the next conditions with an `or` logical operator.
+     * @example pbQuery<User>().equal('name', 'Alice').or().equal('name', 'Bob'); // name='Alice' || name='Bob'
      */
     or(): Omit<QueryBuilder<T, MaxDepth>, 'build'>
 
@@ -485,13 +485,13 @@ export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6> {
      * Returns the query string and values.
      * @example
      * // We recommend using Pocketbase's native `pb.filter()` function
-     * const query = pbQuery<User>.equal('name', 'Alice').build(pb.filter);
+     * const query = pbQuery<User>().equal('name', 'Alice').build(pb.filter);
      * // or `$dbx.exp()` in JSVM
-     * const query = pbQuery<User>.equal('name', 'Alice').build($dbx.exp);
+     * const query = pbQuery<User>().equal('name', 'Alice').build($dbx.exp);
      * console.log(query); // name='Alice'
      *
      * // You can also filter it later
-     * const query = qb.equal('name', 'Alice').build();
+     * const query = pbQuery<User>().equal('name', 'Alice').build();
      * console.log(query.raw); // name={:name1}
      * console.log(query.values); // { name: 'Alice' }
      * console.log(pb.filter(query.raw, query.values)); // name='Alice'

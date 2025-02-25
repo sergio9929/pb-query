@@ -8,7 +8,7 @@
 
 ## Features
 
-- **🚀 Full TypeScript Integration** - Autocomplete paths and validate values against your schema
+- **🚀 Full TypeScript Integration** - Autocomplete keys and validate values against your schema
 - **🔗 Chainable API** - Build complex queries with `.and()`/`.or()` logic
 - **🛡️ Injection Protection** - Automatic parameter escaping
 - **🧩 Nested Grouping** - Create complex logic with `.group()`
@@ -111,21 +111,71 @@ Documentation directly in your IDE.
 
 ![JSDoc](docs/jsdoc.png)
 
-Leveraging the power of typescript we can give you suggestions based on your schema.
+Leveraging the power of typescript we can give suggestions based on your schema.
 
 ![Field name suggestions](docs/field%20name%20suggestions.png)
 
 ## Core Concepts
 
-### Key Modifiers
+### Building the query
 
-Native PocketBase query modifiers.
+The query returns using `.build()`.
 
 ```ts
-pbQuery<Post>()
-  .equal('title:lower', 'hello world') // Case-insensitive (not needed for .like() operators)
-  .equal('tags:length', 5) // If array length equals 5
-  .equal('tags:each', 'Tech') // If every array element equals'Tech'
+// ❌ Wrong
+const query = pbQuery<Post>()
+  .like('content', 'Top Secret%')
+
+console.log(query);  // object with functions
+```
+
+```ts
+// ✅ Right
+const query = pbQuery<Post>()
+  .like('content', 'Top Secret%')
+  .build();
+
+console.log(query);  // { raw: 'content~{:content1}', values: { content1: 'Top Secret%' } }
+```
+
+You can use this principle to create dynamic queries
+
+```ts
+const dynamicQuery = pbQuery<Post>()
+  .like('content', 'Top Secret%')
+
+if (user) {
+  dynamicQuery.and().equal('author', user.id)
+}
+
+const query = dynamicQuery.build()
+```
+
+or declare a global query builder for a specific schema.
+
+```ts
+// queries.ts
+
+export const queryUsers = pbQuery<User>()
+export const queryPosts = pbQuery<Post>()
+```
+
+```ts
+// pages/posts.ts
+
+import PocketBase from 'pocketbase';
+
+// PocketBase instance
+const pb = new PocketBase("https://example.com")
+
+const query = queryPosts
+  .search('content', 'Top Secret%')
+  .build(pb.filter); // use PocketBase's filter function
+
+const records = await pb.collection("posts").getList(1, 20, {
+  filter: query
+})
+
 ```
 
 ### Parameter Safety
@@ -135,7 +185,7 @@ We don't filter your query by default, so by just using `.build()` you will get 
 ```ts
 // ❌ Unfiltered query
 const { raw, values } = pbQuery<Post>()
-  .like('content', 'Top Secret%')
+  .search(['title', 'content', 'tags', 'author.name', 'author.surname'], 'Football');
   .build();
 
 console.log(raw);    // "content~{:content1}"
@@ -169,11 +219,22 @@ const query = pbQuery<Post>()
 console.log(query);  // "content~'Top Secret%'"
 ```
 
+### Key Modifiers
+
+Native PocketBase query modifiers.
+
+```ts
+pbQuery<Post>()
+  .equal('title:lower', 'hello world') // Case-insensitive (not needed for .like() operators)
+  .equal('tags:length', 5) // If array length equals 5
+  .equal('tags:each', 'Tech') // If every array element equals'Tech'
+```
+
 ## Basic Operators
 
 ### Equality Checks
 
-#### `.equal(path, value)`
+#### `.equal(key, value)`
 
 Matches records where `key` equals `value`.
 
@@ -183,7 +244,7 @@ pbQuery<Post>.equal('author.name', 'Alice'); // name='Alice'
 pbQuery<Post>.equal('author.name:lower', 'alice'); // name:lower='alice'
 ```
 
-#### `.notEqual(path, value)`
+#### `.notEqual(key, value)`
 
 Matches records where `key` is not equal to `value`.
 
@@ -195,7 +256,7 @@ pbQuery<Post>.notEqual('author.name:lower', 'alice'); // name:lower!='alice'
 
 ### Comparisons
 
-#### `.greaterThan(path, value)`
+#### `.greaterThan(key, value)`
 
 Matches records where `key` is greater than `value`.
 
@@ -203,7 +264,7 @@ Matches records where `key` is greater than `value`.
 pbQuery<User>().greaterThan('age', 21); // age>21
 ```
 
-#### `.greaterThanOrEqual(path, value)`
+#### `.greaterThanOrEqual(key, value)`
 
 Matches records where `key` is greater than or equal to `value`.
 
@@ -211,7 +272,7 @@ Matches records where `key` is greater than or equal to `value`.
 pbQuery<User>().greaterThanOrEqual('age', 18); // age>=18
 ```
 
-#### `.lessThan(path, value)`
+#### `.lessThan(key, value)`
 
 Matches records where `key` is less than `value`.
 
@@ -219,7 +280,7 @@ Matches records where `key` is less than `value`.
 pbQuery<User>().lessThan('age', 50); // age<50
 ```
 
-#### `.lessThanOrEqual(path, value)`
+#### `.lessThanOrEqual(key, value)`
 
 Matches records where `key` is less than or equal to `value`.
 
@@ -229,7 +290,7 @@ pbQuery<User>().lessThanOrEqual('age', 65); // age<=65
 
 ### Text Search
 
-#### `.like(path, value)`
+#### `.like(key, value)`
 
 Matches records where `key` contains `value`.
 
@@ -251,7 +312,7 @@ pbQuery<Post>().like('author.name', 'Joh%'); // name~'Joh%'
 pbQuery<Post>().like('author.name', '%Doe'); // name~'%Doe'
 ```
 
-#### `.notLike(path, value)`
+#### `.notLike(key, value)`
 
 Matches records where `key` doesn't contain `value`.
 
@@ -328,7 +389,7 @@ Returns all the authors who have published
 >
 > @ganigeorgiev in [#6080](https://github.com/pocketbase/pocketbase/discussions/6080#discussioncomment-11526411)
 
-#### `.anyEqual(path, value)`
+#### `.anyEqual(key, value)`
 
 Matches records where at least one of the values in the given `key` equals `value`.
 
@@ -339,7 +400,7 @@ pbQuery<Book>().anyEqual('books_via_author.title', 'The Island'); // post_via_au
 pbQuery<Book>().anyEqual('books_via_author.title:lower', 'the island'); // post_via_author.name:lower?='the island'
 ```
 
-#### `.anyNotEqual(path, value)`
+#### `.anyNotEqual(key, value)`
 
 Matches records where at least one of the values in the given `key` is not equal to `value`.
 
@@ -350,7 +411,7 @@ pbQuery<Book>().anyNotEqual('books_via_author.title', 'The Island'); // post_via
 pbQuery<Book>().anyNotEqual('books_via_author.title:lower', 'the island'); // post_via_author.name:lower?!='the island'
 ```
 
-#### `.anyGreaterThan(path, value)`
+#### `.anyGreaterThan(key, value)`
 
 Matches records where at least one of the values in the given `key` is greater than `value`.
 
@@ -358,7 +419,7 @@ Matches records where at least one of the values in the given `key` is greater t
 pbQuery<User>().anyGreaterThan('age', 21); // age?>21
 ```
 
-#### `.anyGreaterThanOrEqual(path, value)`
+#### `.anyGreaterThanOrEqual(key, value)`
 
 Matches records where at least one of the values in the given `key` is greater than or equal to `value`.
 
@@ -366,7 +427,7 @@ Matches records where at least one of the values in the given `key` is greater t
 pbQuery<User>().anyGreaterThanOrEqual('age', 18); // age?>=18
 ```
 
-#### `.anyLessThan(path, value)`
+#### `.anyLessThan(key, value)`
 
 Matches records where at least one of the values in the given `key` is less than `value`.
 
@@ -374,7 +435,7 @@ Matches records where at least one of the values in the given `key` is less than
 pbQuery<User>().anyLessThan('age', 50); // age?<50
 ```
 
-#### `.anyLessThanOrEqual(path, value)`
+#### `.anyLessThanOrEqual(key, value)`
 
 Matches records where at least one of the values in the given `key` is less than or equal to `value`.
 
@@ -382,7 +443,7 @@ Matches records where at least one of the values in the given `key` is less than
 pbQuery<User>().anyLessThanOrEqual('age', 65); // age?<=65
 ```
 
-#### `.anyLike(path, value)`
+#### `.anyLike(key, value)`
 
 Matches records where at least one of the values in the given `key` contains `value`.
 
@@ -404,7 +465,7 @@ pbQuery<Post>().anyLike('author.name', 'Joh%'); // name?~'Joh%'
 pbQuery<Post>().anyLike('author.name', '%Doe'); // name?~'%Doe'
 ```
 
-#### `.anyNotLike(path, value)`
+#### `.anyNotLike(key, value)`
 
 Matches records where at least one of the values in the given `key` doesn't contain `value`.
 
@@ -430,7 +491,7 @@ pbQuery<Post>().anyNotLike('author.name', '%Doe'); // name?!~'%Doe'
 
 ### Multi-Field Search
 
-#### `.search(paths, value)`
+#### `.search(keys, value)`
 
 Matches records where any of the `keys` contain `value`.
 
@@ -459,7 +520,7 @@ pbQuery<User>().search(['name', 'surname'], 'Joh%'); // (name~'Joh%' || surname~
 pbQuery<User>().search(['name', 'surname'], '%Doe'); // (name~'%Doe' || surname~'%Doe')
 ```
 
-#### `.in(path, values)`
+#### `.in(key, values)`
 
 Matches records where `key` is in `values`.
 
@@ -467,7 +528,7 @@ Matches records where `key` is in `values`.
 pbQuery<Post>().in('id', ['id_1', 'id_2, 'id_3]); // (id='id_1' || id='id_2 || id='id_3)
 ```
 
-#### `.notIn(path, values)`
+#### `.notIn(key, values)`
 
 Matches records where `key` is not in `values`.
 
@@ -477,7 +538,7 @@ Matches records where `key` is not in `values`.
 pbQuery<User>().notIn('age', [18, 21, 30]); // (age!=18 && age!=21 && age!=30)
 ```
 
-#### `.between(path, from, to)`
+#### `.between(key, from, to)`
 
 Matches records where `key` is between `from` and `to`.
 
@@ -486,7 +547,7 @@ pbQuery<User>().between('age', 18, 30); // (age>=18 && age<=30)
 pbQuery<User>().between('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created>='2021-01-01' && created<='2021-12-31')
 ```
 
-#### `.notBetween(path, from, to)`
+#### `.notBetween(key, from, to)`
 
 Matches records where `key` is between `from` and `to`.
 
@@ -497,7 +558,7 @@ pbQuery<User>().between('created', new Date('2021-01-01'), new Date('2021-12-31'
 
 ### Null Checks
 
-#### `.isNull(path)`
+#### `.isNull(key)`
 
 Matches records where `key` is null.
 
@@ -505,7 +566,7 @@ Matches records where `key` is null.
 pbQuery<User>().isNull('name'); // name=''
 ```
 
-#### `.isNotNull(path)`
+#### `.isNotNull(key)`
 
 Matches records where `key` is not null.
 

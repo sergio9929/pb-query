@@ -58,5 +58,6 @@ test('all possible keys', () => {
     equal('isVisible', true).build()
     equal('user', 'hola').build()
     equal('user.age', 18).build()
+    equal('anything_via_user', new Date()).build()
     equal('anything_via_user.anything', new Date()).build()
 })

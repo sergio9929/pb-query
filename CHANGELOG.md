@@ -1,5 +1,11 @@
 # @sergio9929/pb-query
 
+## 0.0.5
+
+### Patch Changes
+
+- 9f2ca18: fix JSDoc and create README
+
 ## 0.0.4
 
 ### Patch Changes

@@ -48,7 +48,7 @@ const query = pbQuery<Post>()
   .and()
   .between('created', new Date('2023-01-01'), new Date('2023-12-31'))
   .or()
-  .group(q => 
+  .group((q) => 
     q.anyLike('tags', 'sports')
       .and()
       .greaterThan('priority', 5)
@@ -79,39 +79,31 @@ const records = await pb.collection("posts").getList(1, 20, {
 /// <reference path="../pb_data/types.d.ts" />
 
 routerAdd("GET", "/test", (e) => {
-  const { pbQuery } = require('@sergio9929/pb-query')
+  const { pbQuery } = require('@sergio9929/pb-query');
 
   const { raw, values } = pbQuery()
     .search(['title', 'content', 'tags.title', 'author'], 'footba')
     .and()
     .between('created', new Date('2023-01-01'), new Date('2024-12-31'))
     .or()
-    .group(q => 
+    .group((q) =>
       q.anyLike('tags', 'sports')
         .and()
         .greaterThan('priority', 5)
     )
     .build();
 
-  try {
-    const records = $app.findRecordsByFilter(
-      "posts",
-      raw,
-      '',
-      20,
-      0,
-      values
-    )
+  const records = $app.findRecordsByFilter(
+    'posts',
+    raw,
+    '',
+    20,
+    0,
+    values,
+  );
 
-    return e.json(200, records)
-  } catch (error) {
-    console.error(error)
-
-    return e.json(404, { "message": "Not Found" })
-  }
-
-  return e.json(500, { "message": "Internal Server Error" })
-})
+  return e.json(200, records);
+});
 ```
 
 ## Table of Contents

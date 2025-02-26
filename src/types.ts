@@ -447,7 +447,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
     /**
      * Creates a logical group.
-     * @example pbQuery<Post>().group(q => q.equal('status', 'active').or().equal('status', 'inactive')); // (status~'active' || status~'inactive')
+     * @example pbQuery<Post>().group((q) => q.equal('status', 'active').or().equal('status', 'inactive')); // (status~'active' || status~'inactive')
      */
     group(
         callback: (

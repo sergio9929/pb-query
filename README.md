@@ -388,7 +388,7 @@ pbQuery<User>().equal('name', 'Alice').or().equal('name', 'Bob'); // name='Alice
 Creates a logical group.
 
 ```ts
-pbQuery<Post>().group(q => q.equal('status', 'active').or().equal('status', 'inactive')); // (status~'active' || status~'inactive')
+pbQuery<Post>().group((q) => q.equal('status', 'active').or().equal('status', 'inactive')); // (status~'active' || status~'inactive')
 ```
 
 ## Multiple Operators
@@ -618,7 +618,7 @@ const buildAdminQuery = (
   .and()
   .in('role', options.roles)
   .and()
-  .group(q => 
+  .group((q) => 
     q.in('status', options.statuses)
       .or()
       .isNull('status')
@@ -635,7 +635,7 @@ const productQuery = pbQuery<Product>()
   .and()
   .notBetween('stock', 0, 5) // Exclude low stock
   .and()
-  .group(q => 
+  .group((q) => 
     q.equal('color', selectedColor)
       .or()
       .isNotNull('customizationOptions')
@@ -648,7 +648,7 @@ const productQuery = pbQuery<Product>()
 function buildSearchQuery(term: string, filters: FilterOptions) {
   return pbQuery<Post>()
     .search(['title', 'content'], term)
-    .group(q => {
+    .group((q) => {
       if (filters.urgent) {
         q.anyGreaterThan('priority', 7);
       }

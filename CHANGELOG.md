@@ -1,5 +1,11 @@
 # @sergio9929/pb-query
 
+## 0.2.3
+
+### Patch Changes
+
+- Update README
+
 ## 0.2.2
 
 ### Patch Changes

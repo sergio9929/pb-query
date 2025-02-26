@@ -8,12 +8,15 @@
 
 ## Features
 
-- **🚀 Full TypeScript Integration** - Autocomplete keys and validate values against your schema.
-- **🔗 Chainable API** - Build complex queries with `.and()`/`.or()` logic.
-- **🛡️ Injection Protection** - Automatic parameter escaping.
-- **🧩 Nested Grouping** - Create complex logic with `.group()`.
-- **📅 Date & Array Support** - First-class handling of dates and array operations.
-- **🔍 Advanced Search** - Multi-field search with a single method call.
+- **🚀 Full TypeScript Integration** – Get autocompletion for fields and type safety based on your schema.
+- **🔗 Chainable API** – Easily build complex queries using a functional, intuitive syntax.
+- **🛡️ Injection Protection** – Automatically sanitize queries with `pb.filter()`.
+- **🧩 Nested Grouping** – Create advanced logic with `.group()`.
+- **📅 Date & Array Support** – Seamlessly work with dates and array operations.
+- **🔍 Advanced Search** – Perform multi-field searches with a single method call.
+- **⚡ Helper Operators** – Use built-in helpers like `.search()`, `.between()`, `.in()`, `.isNull()`, and more.
+- **🪝 Works Everywhere** – Use queries both in your app and inside `pb_hooks`.
+- **📖 Built-in Documentation** – Get examples and explanations directly in your IDE with JSDoc.
 
 ## Installation
 
@@ -150,11 +153,11 @@ pbQuery<Post>()
 
 Documentation directly in your IDE.
 
-![JSDoc](docs/jsdoc.png)
+![JSDoc](docs/jsdoc.webp)
 
 Leveraging the power of TypeScript, we provide suggestions based on your schema.
 
-![Field name suggestions](docs/field%20name%20suggestions.png)
+![Field name suggestions](docs/field%20name%20suggestions.webp)
 
 ## Core Concepts
 

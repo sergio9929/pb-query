@@ -60,7 +60,7 @@ const query = pbQuery<Post>()
 
 console.log(query);
 // (title~'footba' || content~'footba' || tags~'footba' || author~'footba') 
-// && (created>='2023-01-01' && created<='2023-12-31') 
+// && (created>='2023-01-01 00:00:00.000Z' && created<='2023-12-31 00:00:00.000Z') 
 // || (tags?~'sports' && priority>5)
 
 // Use your query
@@ -125,7 +125,7 @@ routerAdd("GET", "/test", (e) => {
 Building complex filters in PocketBase often leads to:
 
 1. **String Concatenation Hell**  
-    `'created >= "2023-01-01" && (tags ~ "%urgent%" || priority > 5)'`  
+    `'created >= "2023-01-01 00:00:00.000Z" && (tags ~ "%urgent%" || priority > 5)'`  
     😱 Prone to syntax errors and difficult to maintain.
 
 2. **Type Safety Issues**  
@@ -572,7 +572,7 @@ Matches records where `key` is between `from` and `to`.
 
 ```ts
 pbQuery<User>().between('age', 18, 30); // (age>=18 && age<=30)
-pbQuery<User>().between('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created>='2021-01-01' && created<='2021-12-31')
+pbQuery<User>().between('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created>='2021-01-01 00:00:00.000Z' && created<='2021-12-31 00:00:00.000Z')
 ```
 
 #### `.notBetween(key, from, to)`
@@ -581,7 +581,7 @@ Matches records where `key` is not between `from` and `to`.
 
 ```ts
 pbQuery<User>().notBetween('age', 18, 30); // (age<18 || age>30)
-pbQuery<User>().notBetween('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created<'2021-01-01' || created>'2021-12-31')
+pbQuery<User>().notBetween('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created<'2021-01-01 00:00:00.000Z' || created>'2021-12-31 00:00:00.000Z')
 ```
 
 ### Null Checks

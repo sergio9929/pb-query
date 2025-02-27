@@ -1,5 +1,11 @@
 # @sergio9929/pb-query
 
+## 0.2.4
+
+### Patch Changes
+
+- fix date output format in the docs
+
 ## 0.2.3
 
 ### Patch Changes

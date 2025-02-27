@@ -170,3 +170,13 @@ test('back-relations', () => {
         "anything_via_author='2021-12-31 00:00:00.000Z' && anything_via_author.anything='2021-12-31 00:00:00.000Z'",
     )
 })
+
+test('test', () => {
+    const query = pbQuery<Post>()
+        .search(['title', 'content', 'tags', 'author'], 'footba')
+        .and()
+        .between('created', new Date('2023-01-01'), new Date('2023-12-31'))
+        .build(pb.filter)
+
+    console.log(query)
+})

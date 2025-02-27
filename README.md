@@ -637,9 +637,9 @@ const buildAdminQuery = (
 const productQuery = pbQuery<Product>()
   .between('price', minPrice, maxPrice)
   .and()
-  .anyLike('tags', `%${category}%`)
+  .anyLike('tags', category)
   .and()
-  .notBetween('stock', 0, 5) // Exclude low stock
+  .lessThan('stock', 5)
   .and()
   .group((q) => 
     q.equal('color', selectedColor)

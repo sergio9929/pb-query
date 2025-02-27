@@ -157,7 +157,7 @@ Documentation directly in your IDE.
 
 Leveraging the power of TypeScript, we provide suggestions based on your schema.
 
-![Field name suggestions](docs/field%20name%20suggestions.webp)
+![Field name suggestions](docs/suggestions.webp)
 
 ## Core Concepts
 

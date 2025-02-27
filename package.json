@@ -13,7 +13,9 @@
         "release:publish": "changeset publish",
         "release": "run-s release:*",
         "lint": "biome check --write --no-errors-on-unmatched",
-        "test": "vitest run --typecheck"
+        "test": "vitest run --typecheck",
+        "new": "changeset",
+        "new:apply": "changeset version"
     },
     "keywords": [],
     "author": "sergio9929",

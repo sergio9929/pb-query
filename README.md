@@ -121,6 +121,7 @@ routerAdd("GET", "/test", (e) => {
 - [Helper Operators](#helper-operators)
 - [Real-World Recipes](#real-world-recipes)
 - [Troubleshooting](#troubleshooting)
+- [Credits](#credits)
 
 ## Why pb-query?
 
@@ -694,8 +695,15 @@ pbQuery<Post>().between('created', new Date('2023-01-01'), new Date());
     // author.info.age=30 && author.email~'%@example.com'
     ```
 
+
+## Credits
+
+This project was inspired by [@emresandikci/pocketbase-query](https://github.com/emresandikci/pocketbase-query).
+
 ---
 
 **@sergio9929/pb-query** is maintained by [@sergio9929](https://github.com/sergio9929) with ❤️
+
 Found a bug? [Open an issue](https://github.com/sergio9929/pb-query/issues)
+
 Want to contribute? [Read our guide](CONTRIBUTING.md)

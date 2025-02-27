@@ -1,5 +1,11 @@
 # @sergio9929/pb-query
 
+## 0.2.5
+
+### Patch Changes
+
+- include MIT license
+
 ## 0.2.4
 
 ### Patch Changes

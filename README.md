@@ -1,3 +1,5 @@
+![@sergio9929/pb-query](docs/banner.webp)
+
 # pb-query 🔍✨
 
 **Build type-safe PocketBase queries with the power of TypeScript.**  

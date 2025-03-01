@@ -38,7 +38,7 @@ yarn add @sergio9929/pb-query
 ### App
 
 ```ts
-// test.ts
+// example.ts
 
 import { pbQuery } from '@sergio9929/pb-query';
 import PocketBase from 'pocketbase';
@@ -79,11 +79,11 @@ const records = await pb.collection("posts").getList(1, 20, {
 [Learn more](https://pocketbase.io/docs/js-overview/)
 
 ```js
-// pb_hooks/test.pb.js
+// pb_hooks/example.pb.js
 
 /// <reference path="../pb_data/types.d.ts" />
 
-routerAdd("GET", "/test", (e) => {
+routerAdd("GET", "/example", (e) => {
   const { pbQuery } = require('@sergio9929/pb-query');
 
   const { raw, values } = pbQuery()

@@ -11,63 +11,75 @@ type DepthCounter = [1, 2, 3, 4, 5, 6, never]
 
 export type Path<
     T,
-    MaxDepth extends number = 6,
+    MaxDepth extends number,
     K extends keyof T = keyof T,
     D extends number = 0,
 > = D extends MaxDepth
     ? never
-    : K extends string
-      ? T[K] extends string
-          ? `${K}` | `${K}:lower`
-          : T[K] extends readonly object[]
+    : K extends string // This filters out symbol keys
+      ? KeyPaths<T, K, MaxDepth, D> // Now K is guaranteed to be string key
+      : never
+
+type KeyPaths<
+    T,
+    K extends string & keyof T,
+    MaxDepth extends number,
+    D extends number,
+> = T[K] extends string
+    ? `${K}` | `${K}:lower`
+    : T[K] extends readonly object[]
+      ?
+            | `${K}`
+            | `${K}:each`
+            | `${K}:length`
+            | `${K}.${Path<T[K][number], MaxDepth, keyof T[K][number], DepthCounter[D]>}`
+      : T[K] extends readonly unknown[]
+        ? `${K}` | `${K}:each` | `${K}:length`
+        : T[K] extends Date
+          ? `${K}`
+          : T[K] extends object
             ?
                   | `${K}`
-                  | `${K}:each`
-                  | `${K}:length`
-                  | `${K}.${Path<T[K][number], MaxDepth, keyof T[K][number], DepthCounter[D]>}`
-            : T[K] extends readonly unknown[]
-              ? `${K}` | `${K}:each` | `${K}:length`
-              : T[K] extends Date
-                ? `${K}`
-                : T[K] extends object
-                  ?
-                        | `${K}`
-                        | `${K}.${Path<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
-                        | `${string}_via_${K}`
-                        | `${string}_via_${K}.${string}`
-                  : `${K}`
-      : never
+                  | `${K}.${Path<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+                  | `${string}_via_${K}`
+                  | `${string}_via_${K}.${string}`
+            : `${K}`
+
+type PathValueHelper<
+    T,
+    P extends string,
+    MaxDepth extends number,
+    D extends number,
+> = P extends `${infer _Prefix}_via_${infer _Suffix}`
+    ? unknown
+    : P extends `${infer Key}.${infer Rest}`
+      ? Key extends keyof T
+          ? T[Key] extends readonly (infer E)[]
+              ? PathValue<E, Rest, MaxDepth, DepthCounter[D]> // If it's an array, continue resolving on its elements
+              : PathValue<T[Key], Rest, MaxDepth, DepthCounter[D]> // Otherwise, continue resolving normally
+          : never
+      : P extends `${infer Key}:${infer Modifier}`
+        ? Key extends keyof T
+            ? HandleModifier<T[Key], Modifier>
+            : never
+        : P extends keyof T
+          ? T[P] extends object[]
+              ? string
+              : T[P] extends unknown[]
+                ? T[P][number]
+                : T[P] extends Date
+                  ? T[P]
+                  : T[P] extends object
+                    ? string
+                    : T[P]
+          : never
 
 export type PathValue<
     T,
     P extends string,
-    MaxDepth extends number = 6,
+    MaxDepth extends number,
     D extends number = 0,
-> = D extends MaxDepth
-    ? never
-    : P extends `${infer _Prefix}_via_${infer _Suffix}`
-      ? unknown
-      : P extends `${infer Key}.${infer Rest}`
-        ? Key extends keyof T
-            ? T[Key] extends readonly (infer E)[]
-                ? PathValue<E, Rest, MaxDepth, DepthCounter[D]> // If it's an array, continue resolving on its elements
-                : PathValue<T[Key], Rest, MaxDepth, DepthCounter[D]> // Otherwise, continue resolving normally
-            : never
-        : P extends `${infer Key}:${infer Modifier}`
-          ? Key extends keyof T
-              ? HandleModifier<T[Key], Modifier>
-              : never
-          : P extends keyof T
-            ? T[P] extends object[]
-                ? string
-                : T[P] extends unknown[]
-                  ? T[P][number]
-                  : T[P] extends Date
-                    ? T[P]
-                    : T[P] extends object
-                      ? string
-                      : T[P]
-            : never
+> = D extends MaxDepth ? never : PathValueHelper<T, P, MaxDepth, D>
 
 export type HandleModifier<V, Modifier extends string> = Modifier extends 'each'
     ? V extends number[]

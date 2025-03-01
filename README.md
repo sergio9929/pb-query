@@ -166,7 +166,7 @@ Leveraging the power of TypeScript, we provide suggestions based on your schema.
 
 ### Building the Query
 
-The query is finalized using `.build()`.
+The query is returned (not reset) using `.build()`.
 
 ```ts
 // ❌ Wrong
@@ -188,38 +188,13 @@ console.log(query);  // { raw: 'content~{:content1}', values: { content1: 'Top S
 You can use this principle to create dynamic queries:
 
 ```ts
-const dynamicQuery = pbQuery<Post>()
-  .like('content', 'Top Secret%');
+const dynamicQuery = pbQuery<Post>().like('content', 'Top Secret%');
 
 if (user) {
   dynamicQuery.and().equal('author', user.id);
 }
 
 const query = dynamicQuery.build();
-```
-
-Or declare global query builders for specific schemas:
-
-```ts
-// queries.ts
-export const queryUsers = pbQuery<User>;
-export const queryPosts = pbQuery<Post>;
-```
-
-```ts
-// pages/posts.ts
-import PocketBase from 'pocketbase';
-
-// PocketBase instance
-const pb = new PocketBase("https://example.com");
-
-const query = queryPosts
-  .search('content', 'Top Secret%')
-  .build(pb.filter); // use PocketBase's filter function
-
-const records = await pb.collection("posts").getList(1, 20, {
-  filter: query,
-});
 ```
 
 ### Parameter Safety
@@ -651,19 +626,39 @@ const productQuery = pbQuery<Product>()
 ### Dynamic Query Building
 
 ```ts
-function buildSearchQuery(term: string, filters: FilterOptions) {
-  return pbQuery<Post>()
-    .search(['title', 'content'], term)
-    .group((q) => {
-      if (filters.urgent) {
-        q.anyGreaterThan('priority', 7);
-      }
-      if (filters.recent) {
-        q.between('created', subMonths(new Date(), 1), new Date());
-      }
-      return q;
-    });
+function buildSearchQuery(term: string, user: User) {
+  const dynamicQuery = pbQuery<Post>().like('content', term).and();
+
+  if (user.created < new Date('2020-01-01')) {
+    return dynamicQuery
+      .lessThan('created', new Date('2020-01-01'))
+      .build(); // content~{:content1} && created<{:created1}
+  }
+
+  return dynamicQuery
+    .greaterThanOrEqual('created', new Date('2020-01-01'))
+    .build(); // content~{:content1} && created>={:created1}
 }
+
+const searchQuery = buildSearchQuery('Top Secret', user);
+```
+
+### Typed query builders
+
+```ts
+// query-builders.ts
+export const queryUsers = pbQuery<User>;
+export const queryPosts = pbQuery<Post>;
+```
+
+```ts
+// posts.ts
+const searchQuery = queryPosts().search(['title', 'content', 'tags', 'author'], 'footba');
+```
+
+```ts
+// user.ts
+const userQuery = queryUsers().equal('username', 'sergio9929');
 ```
 
 ## Troubleshooting

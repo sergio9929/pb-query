@@ -198,12 +198,12 @@ if (user) {
 const query = dynamicQuery.build();
 ```
 
-Or declare global query builders for a specific schemas:
+Or declare global query builders for specific schemas:
 
 ```ts
 // queries.ts
-export const queryUsers = pbQuery<User>();
-export const queryPosts = pbQuery<Post>();
+export const queryUsers = pbQuery<User>;
+export const queryPosts = pbQuery<Post>;
 ```
 
 ```ts

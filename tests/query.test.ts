@@ -35,7 +35,7 @@ interface Post {
 
 const pb = new PocketBase()
 
-test('dilter discrepancy', () => {
+test('filter discrepancy', () => {
     const query1 = pbQuery<Post>()
         .equal('author.name', 'John')
         .and()
@@ -76,18 +76,18 @@ test('dilter discrepancy', () => {
 })
 
 test('post query', () => {
-    const postQuery = pbQuery<Post>()
+    const postQuery = pbQuery<Post>
 
-    expect(postQuery.equal('author.name', 'John').build(filter)).toBe(
+    expect(postQuery().equal('author.name', 'John').build(filter)).toBe(
         "author.name='John'",
     )
     expect(
-        postQuery
+        postQuery()
             .equal('author.name', 'John')
             .and()
             .equal('author.age', 20)
             .build(filter),
-    ).toBe("author.name='John'author.name='John' && author.age=20")
+    ).toBe("author.name='John' && author.age=20")
 })
 
 test('multiple queries', () => {
@@ -169,14 +169,4 @@ test('back-relations', () => {
     expect(groupTest).toBe(
         "anything_via_author='2021-12-31 00:00:00.000Z' && anything_via_author.anything='2021-12-31 00:00:00.000Z'",
     )
-})
-
-test('test', () => {
-    const query = pbQuery<Post>()
-        .search(['title', 'content', 'tags', 'author'], 'footba')
-        .and()
-        .between('created', new Date('2023-01-01'), new Date('2023-12-31'))
-        .build(pb.filter)
-
-    console.log(query)
 })

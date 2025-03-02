@@ -10,7 +10,7 @@
 
 ## Features
 
-- **🚀 Full TypeScript Integration** – Get autocompletion for fields and type safety based on your schema.
+- **💬 Full TypeScript Integration** – Get autocompletion for fields and type safety based on your schema.
 - **🔗 Chainable API** – Easily build complex queries using a functional, intuitive syntax.
 - **🛡️ Injection Protection** – Automatically sanitize queries with `pb.filter()`.
 - **🧩 Nested Grouping** – Create advanced logic with `.group()`.
@@ -113,15 +113,16 @@ routerAdd("GET", "/example", (e) => {
 
 ## Table of Contents
 
-- [Why pb-query?](#why-pb-query)
-- [Core Concepts](#core-concepts)
-- [Basic Operators](#basic-operators)
-- [Combination Operators](#combination-operators)
-- [Multiple Operators](#multiple-operators)
-- [Helper Operators](#helper-operators)
-- [Real-World Recipes](#real-world-recipes)
-- [Troubleshooting](#troubleshooting)
-- [Credits](#credits)
+- ✨ [Why pb-query?](#why-pb-query)
+- 🧠 [Core Concepts](#core-concepts)
+- 🔧 [Basic Operators](#basic-operators)
+- 🧩 [Combination Operators](#combination-operators)
+- 🛠️ [Multiple Operators](#multiple-operators)
+- ⚡ [Helper Operators](#helper-operators)
+- 💡 [Tips and Tricks](#tips-and-tricks)
+- 📜 [Real-World Recipes](#real-world-recipes)
+- 🚨 [Troubleshooting](#troubleshooting)
+- 🙏 [Credits](#credits)
 
 ## Why pb-query?
 
@@ -580,7 +581,7 @@ Matches records where `key` is not null.
 pbQuery<User>().isNotNull('name'); // name!=''
 ```
 
-## Real-World Recipes
+## Tips and tricks
 
 ### Typed Query Builders
 
@@ -628,6 +629,8 @@ const searchQuery2 = querySportsPosts()
 1. **Initial State**: When you clone a query, it captures the current state of the query builder, including all conditions and values.
 2. **Independent Instances**: Each cloned query is independent, so modifying one does not affect the others.
 3. **Reusability**: Cloning is ideal for creating reusable query templates that can be extended with additional conditions.
+
+## 📜 Real-World Recipes
 
 ### Paginated Admin Dashboard
 

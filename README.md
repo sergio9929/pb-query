@@ -582,6 +582,53 @@ pbQuery<User>().isNotNull('name'); // name!=''
 
 ## Real-World Recipes
 
+### Typed Query Builders
+
+```ts
+// query-builders.ts
+export const queryUsers = pbQuery<User>;
+export const queryPosts = pbQuery<Post>;
+```
+
+```ts
+// posts.ts
+const searchQuery = queryPosts()
+  .search(['title', 'content', 'tags', 'author'], 'footba')
+  .build(pb.filter);
+```
+
+```ts
+// user.ts
+const userQuery = queryUsers().equal('username', 'sergio9929').build(pb.filter);
+```
+
+### Cloning queries
+
+You can clone queries to create new query builders with an initial state. This is useful when you want to reuse a base query but apply additional conditions independently.
+
+```ts
+// Create a base query for sports-related posts
+export const querySportsPosts = () => pbQuery<Post>()
+  .anyLike('tags', 'sports') 
+  .and(); // Initial condition: ags?~'sports' &&
+
+const searchQuery1 = querySportsPosts()
+  .search(['title', 'content', 'tags', 'author'], 'basketba')
+  .build(pb.filter);
+// tags?~'sports' && (title~'basketba' || content~'basketba' || tags~'basketba' || author~'basketba')
+
+const searchQuery2 = querySportsPosts()
+  .search(['title', 'content', 'tags', 'author'], 'footba')
+  .build(pb.filter);
+// tags?~'sports' && (title~'footba' || content~'footba' || tags~'footba' || author~'footba')
+```
+
+#### How Cloning Works
+
+1. **Initial State**: When you clone a query, it captures the current state of the query builder, including all conditions and values.
+2. **Independent Instances**: Each cloned query is independent, so modifying one does not affect the others.
+3. **Reusability**: Cloning is ideal for creating reusable query templates that can be extended with additional conditions.
+
 ### Paginated Admin Dashboard
 
 ```ts
@@ -643,24 +690,6 @@ function buildSearchQuery(term: string, user: User) {
 }
 
 const searchQuery = buildSearchQuery('Top Secret', user);
-```
-
-### Typed query builders
-
-```ts
-// query-builders.ts
-export const queryUsers = pbQuery<User>;
-export const queryPosts = pbQuery<Post>;
-```
-
-```ts
-// posts.ts
-const searchQuery = queryPosts().search(['title', 'content', 'tags', 'author'], 'footba').build(pb.filter);
-```
-
-```ts
-// user.ts
-const userQuery = queryUsers().equal('username', 'sergio9929').build(pb.filter);
 ```
 
 ## Troubleshooting

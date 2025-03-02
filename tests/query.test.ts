@@ -170,3 +170,22 @@ test('back-relations', () => {
         "anything_via_author='2021-12-31 00:00:00.000Z' && anything_via_author.anything='2021-12-31 00:00:00.000Z'",
     )
 })
+
+test('cloned query', () => {
+    const querySportsPosts = () =>
+        pbQuery<Post>().anyLike('tags', 'sports').and()
+
+    const searchQuery1 = querySportsPosts()
+        .search(['title', 'content', 'tags', 'author'], 'basketba')
+        .build(pb.filter)
+    expect(searchQuery1).toBe(
+        "tags?~'sports' && (title~'basketba' || content~'basketba' || tags~'basketba' || author~'basketba')",
+    )
+
+    const searchQuery2 = querySportsPosts()
+        .search(['title', 'content', 'tags', 'author'], 'footba')
+        .build(pb.filter)
+    expect(searchQuery2).toBe(
+        "tags?~'sports' && (title~'footba' || content~'footba' || tags~'footba' || author~'footba')",
+    )
+})

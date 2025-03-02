@@ -603,7 +603,8 @@ const buildAdminQuery = (
     q.in('status', options.statuses)
       .or()
       .isNull('status')
-  );
+  )
+  .build(pb.filter);
 ```
 
 ### E-Commerce Product Filter
@@ -620,10 +621,11 @@ const productQuery = pbQuery<Product>()
     q.equal('color', selectedColor)
       .or()
       .isNotNull('customizationOptions')
-  );
+  )
+  .build(pb.filter);
 ```
 
-### Dynamic Query Building
+### Dynamic Search Query
 
 ```ts
 function buildSearchQuery(term: string, user: User) {
@@ -632,12 +634,12 @@ function buildSearchQuery(term: string, user: User) {
   if (user.created < new Date('2020-01-01')) {
     return dynamicQuery
       .lessThan('created', new Date('2020-01-01'))
-      .build(); // content~{:content1} && created<{:created1}
+      .build(pb.filter); // content~'Top Secret' && created<'2020-01-01 00:00:00.000Z'
   }
 
   return dynamicQuery
     .greaterThanOrEqual('created', new Date('2020-01-01'))
-    .build(); // content~{:content1} && created>={:created1}
+    .build(pb.filter); // content~'Top Secret' && created>='2020-01-01 00:00:00.000Z'
 }
 
 const searchQuery = buildSearchQuery('Top Secret', user);
@@ -653,12 +655,12 @@ export const queryPosts = pbQuery<Post>;
 
 ```ts
 // posts.ts
-const searchQuery = queryPosts().search(['title', 'content', 'tags', 'author'], 'footba');
+const searchQuery = queryPosts().search(['title', 'content', 'tags', 'author'], 'footba').build(pb.filter);
 ```
 
 ```ts
 // user.ts
-const userQuery = queryUsers().equal('username', 'sergio9929');
+const userQuery = queryUsers().equal('username', 'sergio9929').build(pb.filter);
 ```
 
 ## Troubleshooting

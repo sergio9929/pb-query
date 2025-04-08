@@ -3,7 +3,7 @@
 # pb-query 🔍✨
 
 **Build type-safe PocketBase queries with the power of TypeScript.**  
-*Stop wrestling with filter strings. Start composing queries like code.*
+*Flexible and strongly-typed, with useful helpers to simplify the querying process.*
 
 [![npm](https://img.shields.io/npm/v/@sergio9929/pb-query)](https://www.npmjs.com/package/@sergio9929/pb-query)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?logo=typescript&logoColor=white)
@@ -126,32 +126,7 @@ routerAdd("GET", "/example", (e) => {
 
 ## Why pb-query?
 
-Building complex filters in PocketBase often leads to:
-
-1. **String Concatenation Hell**  
-    `'created >= "2023-01-01 00:00:00.000Z" && (tags ~ "%urgent%" || priority > 5)'`  
-    😱 Prone to syntax errors and difficult to maintain.
-
-2. **Type Safety Issues**  
-    `'user.age > "twenty"'`  
-    😬 Incorrect value types can cause runtime errors.
-
-3. **Typos**  
-    `'user.ege > "twenty"'`  
-    😬 No type checking for field names, leading to hard-to-find bugs.
-
-4. **Security Risks**  
-    `title ~ '${userInput}'`  
-    😨 Manual string interpolation can lead to injection attacks.
-
-**pb-query solves all this:**  
-```ts
-pbQuery<Post>()
-  .greaterThan('user.age', 25) // Type-checked age
-  .and()
-  .like('title', `${safeUserInput}`) // Automatic escaping
-  .build(pb.filter);
-```
+Our goal was to build a flexible, strongly-typed query builder with useful helpers to simplify the querying process. But more importantly, we wanted to create a tool that helps prevent errors and provides examples and solid autocompletion in the IDE. This way, when we come back to the project after a long time, we won't need to relearn the intricacies of PocketBase's querying syntax.
 
 ### Code Suggestions and JSDoc
 

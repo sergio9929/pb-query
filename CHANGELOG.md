@@ -1,5 +1,11 @@
 # @sergio9929/pb-query
 
+## 0.2.7
+
+### Patch Changes
+
+- replace MIT license with UNLICENSE
+
 ## 0.2.6
 
 ### Patch Changes

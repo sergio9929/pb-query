@@ -1,6 +1,6 @@
 {
     "name": "@sergio9929/pb-query",
-    "version": "0.2.7",
+    "version": "0.2.8",
     "description": "A type-safe PocketBase query builder",
     "main": "dist/index.js",
     "module": "dist/index.mjs",
@@ -17,7 +17,17 @@
         "new": "changeset",
         "new:apply": "changeset version"
     },
-    "keywords": [],
+    "keywords": [
+        "pocketbase",
+        "pocketbase-js",
+        "pocketbase-ts",
+        "pocketbase-jsvm",
+        "query",
+        "builder",
+        "querybuilder",
+        "typescript",
+        "ts"
+    ],
     "author": "sergio9929",
     "license": "UNLICENSED",
     "devDependencies": {

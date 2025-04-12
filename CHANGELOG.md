@@ -1,5 +1,11 @@
 # @sergio9929/pb-query
 
+## 0.2.8
+
+### Patch Changes
+
+- add keywords for npm
+
 ## 0.2.7
 
 ### Patch Changes

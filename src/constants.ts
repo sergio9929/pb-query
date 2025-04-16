@@ -16,3 +16,22 @@ export const OPERATORS = {
     anyLike: '?~',
     anyNotLike: '?!~',
 } as const
+
+export const DATETIME_MACROS = [
+    '@now',
+    '@second',
+    '@minute',
+    '@hour',
+    '@weekday',
+    '@day',
+    '@month',
+    '@year',
+    '@yesterday',
+    '@tomorrow',
+    '@todayStart',
+    '@todayEnd',
+    '@monthStart',
+    '@monthEnd',
+    '@yearStart',
+    '@yearEnd',
+] as const

@@ -1,9 +1,13 @@
+import type { DATETIME_MACROS } from './constants'
+
 export type FilterFunction = (
     raw: string,
     params?: {
         [key: string]: unknown
     },
 ) => string
+
+export type DatetimeMacro = (typeof DATETIME_MACROS)[number]
 
 export type RawQueryObject = { raw: string; values: Record<string, unknown> }
 
@@ -68,7 +72,7 @@ type PathValueHelper<
               : T[P] extends unknown[]
                 ? T[P][number]
                 : T[P] extends Date
-                  ? T[P]
+                  ? T[P] | DatetimeMacro
                   : T[P] extends object
                     ? string
                     : T[P]
@@ -91,23 +95,6 @@ export type HandleModifier<V, Modifier extends string> = Modifier extends 'each'
         ? string
         : never
 
-// TODO: Implement a query builder that can build a query string with the following methods
-// = Equal
-// != NOT equal
-// > Greater than
-// >= Greater than or equal
-// < Less than
-// <= Less than or equal
-// ~ Like/Contains (if not specified auto wraps the right string OPERAND in a "%" for wildcard match)
-// !~ NOT Like/Contains (if not specified auto wraps the right string OPERAND in a "%" for wildcard match)
-// ?= Any/At least one of Equal
-// ?!= Any/At least one of NOT equal
-// ?> Any/At least one of Greater than
-// ?>= Any/At least one of Greater than or equal
-// ?< Any/At least one of Less than
-// ?<= Any/At least one of Less than or equal
-// ?~ Any/At least one of Like/Contains (if not specified auto wraps the right string OPERAND in a "%" for wildcard match)
-// ?!~ Any/At least one of NOT Like/Contains (if not specified auto wraps the right string OPERAND in a "%" for wildcard match)
 export interface QueryBuilder<T, MaxDepth extends number = 6> {
     /**
      * Matches records where `key` equals `value`.
@@ -135,7 +122,11 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
     /**
      * Matches records where `key` is greater than `value`.
-     * @example pbQuery<User>().greaterThan('age', 21); // age>21
+     *
+     * [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) could be helpful when comparing dates: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`, [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
+     * @example
+     * pbQuery<User>().greaterThan('age', 21); // age>21
+     * pbQuery<User>().greaterThan('created', new Date('2021-01-01')); // created>'2021-01-01 00:00:00.000Z'
      */
     greaterThan<P extends Path<T, MaxDepth>>(
         key: P,
@@ -144,7 +135,11 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
     /**
      * Matches records where `key` is greater than or equal to `value`.
-     * @example pbQuery<User>().greaterThanOrEqual('age', 18); // age>=18
+     *
+     * [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) could be helpful when comparing dates: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`, [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
+     * @example
+     * pbQuery<User>().greaterThanOrEqual('age', 18); // age>=18
+     * pbQuery<User>().greaterThanOrEqual('created', new Date('2021-01-01')); // created>='2021-01-01 00:00:00.000Z'
      */
     greaterThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
@@ -153,7 +148,11 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
     /**
      * Matches records where `key` is less than `value`.
-     * @example pbQuery<User>().lessThan('age', 50); // age<50
+     *
+     * [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) could be helpful when comparing dates: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`, [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
+     * @example
+     * pbQuery<User>().lessThan('age', 50); // age<50
+     * pbQuery<User>().lessThan('created', new Date('2021-01-01')); // created<'2021-01-01 00:00:00.000Z'
      */
     lessThan<P extends Path<T, MaxDepth>>(
         key: P,
@@ -162,7 +161,11 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
     /**
      * Matches records where `key` is less than or equal to `value`.
-     * @example pbQuery<User>().lessThanOrEqual('age', 65); // age<=65
+     *
+     * [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) could be helpful when comparing dates: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`, [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
+     * @example
+     * pbQuery<User>().lessThanOrEqual('age', 65); // age<=65
+     * pbQuery<User>().lessThanOrEqual('created', new Date('2021-01-01')); // created<='2021-01-01 00:00:00.000Z'
      */
     lessThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
@@ -172,7 +175,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     /**
      * Matches records where `key` contains `value`.
      *
-     * It is case-insensitive, so the `:lower` modifier is unnecessary.
+     * It is case-insensitive, so the `:lower` [modifier](https://pocketbase.io/docs/api-rules-and-filters/#special-identifiers-and-modifiers) is unnecessary.
      *
      * @example
      * // Contains
@@ -195,7 +198,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
     /**
      * Matches records where `key` doesn't contain `value`.
      *
-     * It is case-insensitive, so the `:lower` modifier is unnecessary.
+     * It is case-insensitive, so the `:lower` [modifier](https://pocketbase.io/docs/api-rules-and-filters/#special-identifiers-and-modifiers) is unnecessary.
      *
      * @example
      * // Doesn't contain
@@ -294,7 +297,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * Matches records where at least one of the values in the given `key` contains `value`.
      *
-     * It is case-insensitive, so the `:lower` modifier is unnecessary.
+     * It is case-insensitive, so the `:lower` [modifier](https://pocketbase.io/docs/api-rules-and-filters/#special-identifiers-and-modifiers) is unnecessary.
      *
      * @example
      * // Contains
@@ -319,7 +322,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * Matches records where at least one of the values in the given `key` doesn't contain `value`.
      *
-     * It is case-insensitive, so the `:lower` modifier is unnecessary.
+     * It is case-insensitive, so the `:lower` [modifier](https://pocketbase.io/docs/api-rules-and-filters/#special-identifiers-and-modifiers) is unnecessary.
      *
      * @example
      * // Doesn't contain
@@ -346,7 +349,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * It can be used to perform a full-text search (FTS).
      *
-     * It is case-insensitive, so the `:lower` modifier is unnecessary.
+     * It is case-insensitive, so the `:lower` [modifier](https://pocketbase.io/docs/api-rules-and-filters/#special-identifiers-and-modifiers) is unnecessary.
      *
      * @example
      * // Full text search
@@ -396,9 +399,11 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * **_Helper_**
      *
      * Matches records where `key` is between `from` and `to`.
+     *
+     * [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) could be helpful when comparing dates: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`, [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
      * @example
      * pbQuery<User>().between('age', 18, 30); // (age>=18 && age<=30)
-     * pbQuery<User>().between('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created>='2021-01-01 00:00:00.000Z' && created<='2021-12-31 00:00:00.000Z')
+     * pbQuery<User>().between('created', new Date('2021-01-01'), '@now'); // (created>='2021-01-01 00:00:00.000Z' && created<=@now)
      */
     between<P extends Path<T, MaxDepth>>(
         key: P,
@@ -410,9 +415,11 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * **_Helper_**
      *
      * Matches records where `key` is not between `from` and `to`.
+     *
+     * [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) could be helpful when comparing dates: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`, [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
      * @example
      * pbQuery<User>().notBetween('age', 18, 30); // (age<18 || age>30)
-     * pbQuery<User>().notBetween('created', new Date('2021-01-01'), new Date('2021-12-31')); // (created<'2021-01-01 00:00:00.000Z' || created>'2021-12-31 00:00:00.000Z')
+     * pbQuery<User>().notBetween('created', new Date('2021-01-01'), '@yesterday'); // (created<'2021-01-01 00:00:00.000Z' || created>@yesterday)
      */
     notBetween<P extends Path<T, MaxDepth>>(
         key: P,

@@ -205,7 +205,10 @@ console.log(query);  // "content~'Top Secret%'"
 
 ### Key Modifiers
 
-Native PocketBase query modifiers.
+Native [PocketBase query modifiers](https://pocketbase.io/docs/api-rules-and-filters/#special-identifiers-and-modifiers) are supported:
+- `:lower` – Case-insensitive matching (not needed for `.like()` operators).
+- `:length` – Array length check.
+- `:each` – Array each element check.
 
 ```ts
 pbQuery<Post>()
@@ -213,6 +216,26 @@ pbQuery<Post>()
   .equal('tags:length', 5) // If array length equals 5
   .equal('tags:each', 'Tech'); // If every array element equals 'Tech'
 ```
+
+### Macros
+
+Native [PocketBase datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) are supported: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`
+- `@now` – Current datetime.
+- `@yesterday` – 24 hours before `@now`.
+- `@tomorrow` – 24 hours after`@now`.
+- `@todayStart` – Current date (00:00:00.000Z).
+- `@todayEnd` – Current date (23:59:59.999Z).
+- `@monthStart` – Current month (00:00:00.000Z).
+- `@monthEnd` – Current month (23:59:59.999Z).
+- `@yearStart` – Current year (00:00:00.000Z).
+- `@yearEnd` – Current year (23:59:59.999Z).
+- [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
+
+```ts
+pbQuery<Post>()
+  .between('created', '@now', '@yesterday') // Created between now and tomorrow
+```
+
 
 ## Basic Operators
 

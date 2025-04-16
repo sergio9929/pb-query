@@ -1,3 +1,6 @@
+import { DATETIME_MACROS } from './constants'
+import type { DatetimeMacro } from './types'
+
 /**
  * We expose a filter function, but we recommend using the native `pb.filter()` function instead.
  * @deprecated Use native `pb.filter()`, not this.
@@ -35,4 +38,20 @@ export function filter(
     }
 
     return sanitizedQuery
+}
+
+export function isDateMacro(value: unknown): value is DatetimeMacro {
+    if (!isMacro(value)) {
+        return false
+    }
+
+    return DATETIME_MACROS.includes(value as DatetimeMacro)
+}
+
+function isMacro(value: unknown): value is string {
+    if (typeof value !== 'string') {
+        return false
+    }
+
+    return value.length > 1 && value.startsWith('@')
 }

@@ -7,6 +7,7 @@ import type {
     RawQueryObject,
     RestrictedQueryBuilder,
 } from './types'
+import { isDateMacro } from './utils'
 
 export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
     T,
@@ -41,8 +42,12 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
         operator: string,
         value: PathValue<T, P, MaxDepth>,
     ) => {
-        const newName = saveValue(key, value)
-        query += `${String(key)}${operator}{:${newName}}`
+        if (isDateMacro(value)) {
+            query += `${String(key)}${operator}${value}`
+        } else {
+            const newName = saveValue(key, value)
+            query += `${String(key)}${operator}{:${newName}}`
+        }
     }
 
     type BuilderFunction = <P extends Path<T, MaxDepth>>(

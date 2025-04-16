@@ -1,5 +1,32 @@
 # @sergio9929/pb-query
 
+## 0.2.9
+
+### Patch Changes
+
+- Added support for datetime macros
+
+  You can now use [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) in your queries.
+
+  - `@now`: Current datetime.
+  - `@yesterday`: 24 hours before `@now`.
+  - `@tomorrow`: 24 hours after`@now`.
+  - `@todayStart`: Current date (00:00:00.000Z).
+  - `@todayEnd`: Current date (23:59:59.999Z).
+  - `@monthStart`: Current month (00:00:00.000Z).
+  - `@monthEnd`: Current month (23:59:59.999Z).
+  - `@yearStart`: Current year (00:00:00.000Z).
+  - `@yearEnd`: Current year (23:59:59.999Z).
+  - And [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
+
+  Example:
+
+  ```ts
+  pbQuery<Post>()
+    .between("created", new Date("2021-01-01"), "@now")
+    .build(pb.filter); // (created>='2021-01-01 00:00:00.000Z' && created<=@now)
+  ```
+
 ## 0.2.8
 
 ### Patch Changes

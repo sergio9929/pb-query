@@ -189,3 +189,18 @@ test('cloned query', () => {
         "tags?~'sports' && (title~'footba' || content~'footba' || tags~'footba' || author~'footba')",
     )
 })
+
+test('date macros', () => {
+    const query1 = pbQuery<Post>().greaterThan('created', '@now').build(filter)
+    expect(query1).toBe('created>@now')
+
+    const query2 = pbQuery<Post>()
+        .between('created', '@now', '@yesterday')
+        .build(filter)
+    expect(query2).toBe('(created>=@now && created<=@yesterday)')
+
+    const query3 = pbQuery<Post>()
+        .greaterThan('created', '@test' as '@now')
+        .build(filter)
+    expect(query3).toBe("created>'@test'")
+})

@@ -33,8 +33,8 @@ interface Post {
 test('build function types', () => {
     const { build } = pbQuery<Post>()
 
-    assertType<string>(build(filter))
-    assertType<RawQueryObject>(build())
+    assertType<string>(build(filter).filter)
+    assertType<RawQueryObject>(build().filter)
 })
 
 test('all possible keys', () => {
@@ -62,3 +62,21 @@ test('all possible keys', () => {
     expectTypeOf<'anything_via_user'>().not.toMatchTypeOf<Path<Post, 6>>()
     equal('anything_via_user.anything', new Date()).build()
 })
+
+// type IfEquals<T, U, Y = unknown, N = never> = (<G>() => G extends T
+//     ? 1
+//     : 2) extends <G>() => G extends U ? 1 : 2
+//     ? Y
+//     : N
+
+// type Actual = {
+//     point: GeoPoint
+//     hola: string
+// }
+
+// type Expected = {
+//     point: GeoPoint
+// }
+
+// type Equal = IfEquals<Actual, Expected>
+// type Equal2 = IfEquals<Expected, Actual>

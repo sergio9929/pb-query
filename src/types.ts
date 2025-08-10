@@ -11,6 +11,8 @@ export type DatetimeMacro = (typeof DATETIME_MACROS)[number]
 
 export type RawQueryObject = { raw: string; values: Record<string, unknown> }
 
+export type GeoPoint = { lon: string; lat: string }
+
 type DepthCounter = [1, 2, 3, 4, 5, 6, never]
 
 export type Path<
@@ -37,6 +39,7 @@ type KeyPaths<
             | `${K}:each`
             | `${K}:length`
             | `${K}.${Path<T[K][number], MaxDepth, keyof T[K][number], DepthCounter[D]>}`
+            | `${string}_via_${string}.${string}`
       : T[K] extends readonly unknown[]
         ? `${K}` | `${K}:each` | `${K}:length`
         : T[K] extends Date
@@ -46,6 +49,82 @@ type KeyPaths<
                   | `${K}`
                   | `${K}.${Path<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
                   | `${string}_via_${string}.${string}`
+            : `${K}`
+
+export type PathExpand<
+    T,
+    MaxDepth extends number,
+    K extends keyof T = keyof T,
+    D extends number = 0,
+> = D extends MaxDepth
+    ? never
+    : K extends string // This filters out symbol keys
+      ? KeyPathsExpand<T, K, MaxDepth, D> // Now K is guaranteed to be string key
+      : never
+
+type KeyPathsExpand<
+    T,
+    K extends string & keyof T,
+    MaxDepth extends number,
+    D extends number,
+> = T[K] extends string
+    ? never
+    : T[K] extends readonly object[]
+      ?
+            | `${K}`
+            | `${K}.${PathExpand<T[K][number], MaxDepth, keyof T[K][number], DepthCounter[D]>}`
+            | `${string}_via_${string}`
+            | `${string}_via_${string}.${string}`
+      : T[K] extends readonly unknown[]
+        ? never
+        : T[K] extends Date
+          ? never
+          : T[K] extends object
+            ?
+                  | `${K}`
+                  | `${K}.${PathExpand<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+                  | `${string}_via_${string}`
+                  | `${string}_via_${string}.${string}`
+            : never
+
+export type PathFields<
+    T,
+    MaxDepth extends number,
+    K extends keyof T = keyof T,
+    D extends number = 0,
+> = D extends MaxDepth
+    ? never
+    : K extends string // This filters out symbol keys
+      ? KeyPathsFields<T, K, MaxDepth, D> // Now K is guaranteed to be string key
+      : never
+
+type KeyPathsFields<
+    T,
+    K extends string & keyof T,
+    MaxDepth extends number,
+    D extends number,
+> = T[K] extends string
+    ? `${K}`
+    : T[K] extends readonly object[]
+      ?
+            | `${K}`
+            | `expand.${K}`
+            | `expand.${K}.${PathFields<T[K][number], MaxDepth, keyof T[K][number], DepthCounter[D]>}`
+            | `${string}_via_${string}`
+            | `expand.${string}_via_${string}`
+            | `expand.${string}_via_${string}.${string}`
+      : T[K] extends readonly unknown[]
+        ? `${K}`
+        : T[K] extends Date
+          ? `${K}`
+          : T[K] extends object
+            ?
+                  | `${K}`
+                  | `expand.${K}`
+                  | `expand.${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+                  | `${string}_via_${string}`
+                  | `expand.${string}_via_${string}`
+                  | `expand.${string}_via_${string}.${string}`
             : `${K}`
 
 type PathValueHelper<
@@ -94,9 +173,40 @@ export type HandleModifier<V, Modifier extends string> = Modifier extends 'each'
         ? string
         : never
 
+export interface QueryBuilderStart<T, MaxDepth extends number = 6>
+    extends QueryBuilder<T, MaxDepth> {
+    /**
+     * Matches records where `key` equals `value`.
+     *
+     * @example
+     * pbQuery<Post>().select([
+     *     'title',
+     *     'author.email',
+     *     'author.name',
+     *     'author.profilePicture',
+     * ]); // 'title, author.email, author.name, author.profilePicture'
+     *
+     * @example
+     * pbQuery<Post>().select([
+     *     'title',
+     *     { author: ['email', 'name', 'profilePicture'] },
+     * ]); // 'title, author.email, author.name, author.profilePicture'
+     */
+    fields(keys: PathFields<T, MaxDepth>[]): QueryBuilder<T, MaxDepth>
+
+    /**
+     * `expand()` is not needed if `select()`, we automatically include what to expand.
+     *
+     * @example
+     * pbQuery<Post>().expand(['author', 'comments_via_postId']); // 'author, comments_via_postId'
+     */
+    expand(keys: PathExpand<T, MaxDepth>[]): QueryBuilder<T, MaxDepth>
+}
+
 export interface QueryBuilder<T, MaxDepth extends number = 6> {
     /**
      * Matches records where `key` equals `value`.
+     *
      * @example
      * pbQuery<Post>().equal('author.name', 'Alice'); // name='Alice'
      * // This is case-sensitive. Use the `:lower` modifier for case-insensitive matching.
@@ -109,6 +219,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
     /**
      * Matches records where `key` is not equal to `value`.
+     *
      * @example
      * pbQuery<Post>().notEqual('author.name', 'Alice'); // name!='Alice'
      * // This is case-sensitive. Use the `:lower` modifier for case-insensitive matching.
@@ -123,6 +234,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Matches records where `key` is greater than `value`.
      *
      * [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) could be helpful when comparing dates: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`, [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
+     *
      * @example
      * pbQuery<User>().greaterThan('age', 21); // age>21
      * pbQuery<User>().greaterThan('created', new Date('2021-01-01')); // created>'2021-01-01 00:00:00.000Z'
@@ -136,6 +248,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Matches records where `key` is greater than or equal to `value`.
      *
      * [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) could be helpful when comparing dates: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`, [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
+     *
      * @example
      * pbQuery<User>().greaterThanOrEqual('age', 18); // age>=18
      * pbQuery<User>().greaterThanOrEqual('created', new Date('2021-01-01')); // created>='2021-01-01 00:00:00.000Z'
@@ -149,6 +262,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Matches records where `key` is less than `value`.
      *
      * [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) could be helpful when comparing dates: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`, [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
+     *
      * @example
      * pbQuery<User>().lessThan('age', 50); // age<50
      * pbQuery<User>().lessThan('created', new Date('2021-01-01')); // created<'2021-01-01 00:00:00.000Z'
@@ -162,6 +276,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Matches records where `key` is less than or equal to `value`.
      *
      * [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) could be helpful when comparing dates: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`, [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
+     *
      * @example
      * pbQuery<User>().lessThanOrEqual('age', 65); // age<=65
      * pbQuery<User>().lessThanOrEqual('created', new Date('2021-01-01')); // created<='2021-01-01 00:00:00.000Z'
@@ -221,6 +336,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` equals `value`.
+     *
      * @example
      * pbQuery<Book>().anyEqual('books_via_author.title', 'The Island'); // post_via_author.name?='The Island'
      *
@@ -236,6 +352,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is not equal to `value`.
+     *
      * @example
      * pbQuery<Book>().anyNotEqual('books_via_author.title', 'The Island'); // post_via_author.name?!='The Island'
      *
@@ -251,7 +368,9 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is greater than `value`.
-     * @example pbQuery<User>().anyGreaterThan('age', 21); // age?>21
+     *
+     * @example
+     * pbQuery<User>().anyGreaterThan('age', 21); // age?>21
      */
     anyGreaterThan<P extends Path<T, MaxDepth>>(
         key: P,
@@ -262,7 +381,9 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is greater than or equal to `value`.
-     * @example pbQuery<User>().anyGreaterThanOrEqual('age', 18); // age?>=18
+     *
+     * @example
+     * pbQuery<User>().anyGreaterThanOrEqual('age', 18); // age?>=18
      */
     anyGreaterThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
@@ -273,7 +394,9 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is less than `value`.
-     * @example pbQuery<User>().anyLessThan('age', 50); // age?<50
+     *
+     * @example
+     * pbQuery<User>().anyLessThan('age', 50); // age?<50
      */
     anyLessThan<P extends Path<T, MaxDepth>>(
         key: P,
@@ -284,7 +407,9 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
      *
      * Matches records where at least one of the values in the given `key` is less than or equal to `value`.
-     * @example pbQuery<User>().anyLessThanOrEqual('age', 65); // age?<=65
+     *
+     * @example
+     * pbQuery<User>().anyLessThanOrEqual('age', 65); // age?<=65
      */
     anyLessThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
@@ -376,7 +501,9 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * **_Helper_**
      *
      * Matches records where `key` is in `values`.
-     * @example pbQuery<Post>().in('id', ['id_1', 'id_2', 'id_3']); // (id='id_1' || id='id_2' || id='id_3')
+     *
+     * @example
+     * pbQuery<Post>().in('id', ['id_1', 'id_2', 'id_3']); // (id='id_1' || id='id_2' || id='id_3')
      */
     in<P extends Path<T, MaxDepth>>(
         key: P,
@@ -387,7 +514,9 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * **_Helper_**
      *
      * Matches records where `key` is not in `values`.
-     * @example pbQuery<User>().notIn('age', [18, 21, 30]); // (age!=18 && age!=21 && age!=30)
+     *
+     * @example
+     * pbQuery<User>().notIn('age', [18, 21, 30]); // (age!=18 && age!=21 && age!=30)
      */
     notIn<P extends Path<T, MaxDepth>>(
         key: P,
@@ -400,6 +529,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Matches records where `key` is between `from` and `to`.
      *
      * [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) could be helpful when comparing dates: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`, [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
+     *
      * @example
      * pbQuery<User>().between('age', 18, 30); // (age>=18 && age<=30)
      * pbQuery<User>().between('created', new Date('2021-01-01'), '@now'); // (created>='2021-01-01 00:00:00.000Z' && created<=@now)
@@ -416,6 +546,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * Matches records where `key` is not between `from` and `to`.
      *
      * [PocketBase's datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) could be helpful when comparing dates: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`, [more...](https://pocketbase.io/docs/api-rules-and-filters/#-macros)
+     *
      * @example
      * pbQuery<User>().notBetween('age', 18, 30); // (age<18 || age>30)
      * pbQuery<User>().notBetween('created', new Date('2021-01-01'), '@yesterday'); // (created<'2021-01-01 00:00:00.000Z' || created>@yesterday)
@@ -430,7 +561,9 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * **_Helper_**
      *
      * Matches records where `key` is null.
-     * @example pbQuery<User>().isNull('name'); // name=''
+     *
+     * @example
+     * pbQuery<User>().isNull('name'); // name=''
      */
     isNull<P extends Path<T, MaxDepth>>(
         key: P,
@@ -440,7 +573,9 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * **_Helper_**
      *
      * Matches records where `key` is not null.
-     * @example pbQuery<User>().isNotNull('name'); // name!=''
+     *
+     * @example
+     * pbQuery<User>().isNotNull('name'); // name!=''
      */
     isNotNull<P extends Path<T, MaxDepth>>(
         key: P,
@@ -465,7 +600,9 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
     /**
      * Creates a logical group.
-     * @example pbQuery<Post>().group((q) => q.equal('status', 'active').or().equal('status', 'inactive')); // (status~'active' || status~'inactive')
+     *
+     * @example
+     * pbQuery<Post>().group((q) => q.equal('status', 'active').or().equal('status', 'inactive')); // (status~'active' || status~'inactive')
      */
     group(
         callback: (
@@ -475,6 +612,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
 
     /**
      * Returns the query string and values.
+     *
      * @example
      * // We recommend using Pocketbase's native `pb.filter()` function
      * const query = pbQuery<User>().equal('name', 'Alice').build(pb.filter);
@@ -485,27 +623,42 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      * console.log(query.values); // { name: 'Alice' }
      * console.log(pb.filter(query.raw, query.values)); // name='Alice'
      */
-    build(): { raw: string; values: Record<string, unknown> }
-    build(filter: FilterFunction): string
-    build(
-        filter?: FilterFunction,
-    ): { raw: string; values: Record<string, unknown> } | string
+    build(): {
+        filter: { raw: string; values: Record<string, unknown> }
+        fields: string
+        expand: string
+    }
+    build(filter: FilterFunction): {
+        filter: string
+        fields: string
+        expand: string
+    }
+    build(filter?: FilterFunction): {
+        filter: { raw: string; values: Record<string, unknown> } | string
+        fields: string
+        expand: string
+    }
 }
 
 export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6> {
     /**
      * Combines the previous and the next conditions with an `and` logical operator.
-     * @example pbQuery<User>().equal('name', 'Alice').and().equal('role', 'admin'); // name='Alice' && role='admin'
+     *
+     * @example
+     * pbQuery<User>().equal('name', 'Alice').and().equal('role', 'admin'); // name='Alice' && role='admin'
      */
     and(): Omit<QueryBuilder<T, MaxDepth>, 'build'>
     /**
      * Combines the previous and the next conditions with an `or` logical operator.
-     * @example pbQuery<User>().equal('name', 'Alice').or().equal('name', 'Bob'); // name='Alice' || name='Bob'
+     *
+     * @example
+     * pbQuery<User>().equal('name', 'Alice').or().equal('name', 'Bob'); // name='Alice' || name='Bob'
      */
     or(): Omit<QueryBuilder<T, MaxDepth>, 'build'>
 
     /**
      * Returns the query string and values.
+     *
      * @example
      * // We recommend using Pocketbase's native `pb.filter()` function
      * const query = pbQuery<User>().equal('name', 'Alice').build(pb.filter);
@@ -516,9 +669,19 @@ export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6> {
      * console.log(query.values); // { name: 'Alice' }
      * console.log(pb.filter(query.raw, query.values)); // name='Alice'
      */
-    build(): { raw: string; values: Record<string, unknown> }
-    build(filter: FilterFunction): string
-    build(
-        filter?: FilterFunction,
-    ): { raw: string; values: Record<string, unknown> } | string
+    build(): {
+        filter: RawQueryObject
+        fields: string
+        expand: string
+    }
+    build(filter: FilterFunction): {
+        filter: string
+        fields: string
+        expand: string
+    }
+    build(filter?: FilterFunction): {
+        filter: RawQueryObject | string
+        fields: string
+        expand: string
+    }
 }

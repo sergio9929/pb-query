@@ -1,6 +1,6 @@
-import { assertType, test } from 'vitest'
+import { assertType, expectTypeOf, test } from 'vitest'
 import { pbQuery } from '../src/query'
-import type { RawQueryObject } from '../src/types'
+import type { Path, RawQueryObject } from '../src/types'
 import { filter } from '../src/utils'
 
 interface User {
@@ -59,6 +59,6 @@ test('all possible keys', () => {
     equal('isVisible', true).build()
     equal('user', 'hola').build()
     equal('user.age', 18).build()
-    equal('anything_via_user', new Date()).build()
+    expectTypeOf<'anything_via_user'>().not.toMatchTypeOf<Path<Post, 6>>()
     equal('anything_via_user.anything', new Date()).build()
 })

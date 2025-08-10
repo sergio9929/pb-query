@@ -45,8 +45,7 @@ type KeyPaths<
             ?
                   | `${K}`
                   | `${K}.${Path<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
-                  | `${string}_via_${K}`
-                  | `${string}_via_${K}.${string}`
+                  | `${string}_via_${string}.${string}`
             : `${K}`
 
 type PathValueHelper<

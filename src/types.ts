@@ -13,6 +13,12 @@ export type RawQueryObject = { raw: string; values: Record<string, unknown> }
 
 export type GeoPoint = { lon: string; lat: string }
 
+type Exact<T, U, Y = unknown, N = never> = (<G>() => G extends T
+    ? 1
+    : 2) extends <G>() => G extends U ? 1 : 2
+    ? Y
+    : N
+
 type DepthCounter = [1, 2, 3, 4, 5, 6, never]
 
 export type Path<
@@ -79,13 +85,15 @@ type KeyPathsExpand<
         ? never
         : T[K] extends Date
           ? never
-          : T[K] extends object
-            ?
-                  | `${K}`
-                  | `${K}.${PathExpand<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
-                  | `${string}_via_${string}`
-                  | `${string}_via_${string}.${string}`
-            : never
+          : Exact<T[K], GeoPoint, 1, 2> extends 1
+            ? never
+            : T[K] extends object
+              ?
+                    | `${K}`
+                    | `${K}.${PathExpand<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+                    | `${string}_via_${string}`
+                    | `${string}_via_${string}.${string}`
+              : never
 
 export type PathFields<
     T,
@@ -117,15 +125,19 @@ type KeyPathsFields<
         ? `${K}`
         : T[K] extends Date
           ? `${K}`
-          : T[K] extends object
+          : Exact<T[K], GeoPoint, 1, 2> extends 1
             ?
                   | `${K}`
-                  | `expand.${K}`
-                  | `expand.${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
-                  | `${string}_via_${string}`
-                  | `expand.${string}_via_${string}`
-                  | `expand.${string}_via_${string}.${string}`
-            : `${K}`
+                  | `${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+            : T[K] extends object
+              ?
+                    | `${K}`
+                    | `expand.${K}`
+                    | `expand.${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+                    | `${string}_via_${string}`
+                    | `expand.${string}_via_${string}`
+                    | `expand.${string}_via_${string}.${string}`
+              : `${K}`
 
 type PathValueHelper<
     T,

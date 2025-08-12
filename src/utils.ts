@@ -70,7 +70,7 @@ export function prepareFieldsForExpand(keys: string[]) {
         if (words.length > 1) {
             return words
                 .map((word) => {
-                    const dotIndex = word.lastIndexOf('.')
+                    const dotIndex = word.indexOf('.')
                     return word.slice(0, dotIndex < 0 ? word.length : dotIndex)
                 })
                 .filter(Boolean)

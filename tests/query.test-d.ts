@@ -1,6 +1,12 @@
 import { assertType, expectTypeOf, test } from 'vitest'
 import { pbQuery } from '../src/query'
-import type { Path, RawQueryObject } from '../src/types'
+import type {
+    GeoPoint,
+    Path,
+    PathExpand,
+    PathFields,
+    RawQueryObject,
+} from '../src/types'
 import { filter } from '../src/utils'
 
 interface User {
@@ -9,6 +15,7 @@ interface User {
     age: number
     city: string
     permissions: string[]
+    location: GeoPoint
 }
 
 interface Category {
@@ -59,24 +66,18 @@ test('all possible keys', () => {
     equal('isVisible', true).build()
     equal('user', 'hola').build()
     equal('user.age', 18).build()
+
+    expectTypeOf<'user'>().toMatchTypeOf<PathExpand<Post, 6>>()
+    expectTypeOf<'user.location'>().not.toMatchTypeOf<PathExpand<Post, 6>>()
+    expectTypeOf<'created'>().not.toMatchTypeOf<PathExpand<Post, 6>>()
+
+    expectTypeOf<'user'>().toMatchTypeOf<PathFields<Post, 6>>()
+    expectTypeOf<'expand.user'>().toMatchTypeOf<PathFields<Post, 6>>()
+    expectTypeOf<'expand.user.name'>().toMatchTypeOf<PathFields<Post, 6>>()
+    expectTypeOf<'expand.location'>().not.toMatchTypeOf<PathFields<User, 6>>()
+    expectTypeOf<'location'>().toMatchTypeOf<PathFields<User, 6>>()
+    expectTypeOf<'location.lon'>().toMatchTypeOf<PathFields<User, 6>>()
+
     expectTypeOf<'anything_via_user'>().not.toMatchTypeOf<Path<Post, 6>>()
     equal('anything_via_user.anything', new Date()).build()
 })
-
-// type IfEquals<T, U, Y = unknown, N = never> = (<G>() => G extends T
-//     ? 1
-//     : 2) extends <G>() => G extends U ? 1 : 2
-//     ? Y
-//     : N
-
-// type Actual = {
-//     point: GeoPoint
-//     hola: string
-// }
-
-// type Expected = {
-//     point: GeoPoint
-// }
-
-// type Equal = IfEquals<Actual, Expected>
-// type Equal2 = IfEquals<Expected, Actual>

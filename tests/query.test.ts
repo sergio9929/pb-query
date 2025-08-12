@@ -1,6 +1,7 @@
 import PocketBase from 'pocketbase'
 import { expect, test } from 'vitest'
 import { pbQuery } from '../src/query'
+import type { GeoPoint } from '../src/types'
 import { filter } from '../src/utils'
 
 interface User {
@@ -9,6 +10,7 @@ interface User {
     age: number
     city: string
     permissions: string[]
+    location: GeoPoint
     created: Date
     updated: Date
 }
@@ -211,6 +213,8 @@ test('select', () => {
             'title',
             'tags',
             'author',
+            'expand.author.location.lon',
+            'expand.author.location.lat',
             'expand.author.city',
             'expand.author.age',
             'expand.author.expand.a_via_b',
@@ -220,9 +224,23 @@ test('select', () => {
         ])
         .build(filter)
     expect(query1.fields).toBe(
-        'title,tags,author,expand.author.city,expand.author.age,expand.author.expand.a_via_b,expand.author.expand.a_via_b.expand.record.expand.b_via_c,related,expand.related.updated',
+        [
+            'title',
+            'tags',
+            'author',
+            'expand.author.location.lon',
+            'expand.author.location.lat',
+            'expand.author.city',
+            'expand.author.age',
+            'expand.author.expand.a_via_b',
+            'expand.author.expand.a_via_b.expand.record.expand.b_via_c',
+            'related',
+            'expand.related.updated',
+        ].join(','),
     )
-    expect(query1.expand).toBe('author.a_via_b.record.b_via_c,related')
+    expect(query1.expand).toBe(
+        ['author.a_via_b.record.b_via_c', 'related'].join(','),
+    )
 
     const query2 = pbQuery<Post>().build(filter)
     expect(query2.fields).toBe('')
@@ -238,5 +256,7 @@ test('expand', () => {
             'related',
         ])
         .build(filter)
-    expect(query1.expand).toBe('author.a_via_b.record.b_via_c,related')
+    expect(query1.expand).toBe(
+        ['author.a_via_b.record.b_via_c', 'related'].join(','),
+    )
 })

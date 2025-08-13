@@ -210,8 +210,10 @@ test('date macros', () => {
 test('select', () => {
     const query1 = pbQuery<Post>()
         .fields([
+            '*',
             'title',
             'tags',
+            'content:excerpt(100,true)',
             'author',
             'expand.author.location.lon',
             'expand.author.location.lat',
@@ -220,13 +222,15 @@ test('select', () => {
             'expand.author.expand.a_via_b',
             'expand.author.expand.a_via_b.expand.record.expand.b_via_c',
             'related',
-            'expand.related.updated',
+            'expand.related.*',
         ])
         .build(filter)
     expect(query1.fields).toBe(
         [
+            '*',
             'title',
             'tags',
+            'content:excerpt(100,true)',
             'author',
             'expand.author.location.lon',
             'expand.author.location.lat',
@@ -235,7 +239,7 @@ test('select', () => {
             'expand.author.expand.a_via_b',
             'expand.author.expand.a_via_b.expand.record.expand.b_via_c',
             'related',
-            'expand.related.updated',
+            'expand.related.*',
         ].join(','),
     )
     expect(query1.expand).toBe(

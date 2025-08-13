@@ -71,9 +71,14 @@ test('all possible keys', () => {
     expectTypeOf<'user.location'>().not.toMatchTypeOf<PathExpand<Post, 6>>()
     expectTypeOf<'created'>().not.toMatchTypeOf<PathExpand<Post, 6>>()
 
+    expectTypeOf<'*'>().toMatchTypeOf<PathFields<Post, 6>>()
     expectTypeOf<'user'>().toMatchTypeOf<PathFields<Post, 6>>()
     expectTypeOf<'expand.user'>().toMatchTypeOf<PathFields<Post, 6>>()
+    expectTypeOf<'expand.user.*'>().toMatchTypeOf<PathFields<Post, 6>>()
     expectTypeOf<'expand.user.name'>().toMatchTypeOf<PathFields<Post, 6>>()
+    expectTypeOf<'content:excerpt(100,true)'>().toMatchTypeOf<
+        PathFields<Post, 6>
+    >()
     expectTypeOf<'expand.location'>().not.toMatchTypeOf<PathFields<User, 6>>()
     expectTypeOf<'location'>().toMatchTypeOf<PathFields<User, 6>>()
     expectTypeOf<'location.lon'>().toMatchTypeOf<PathFields<User, 6>>()

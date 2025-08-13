@@ -10,6 +10,11 @@ export type FilterFunction = (
 export type DatetimeMacro = (typeof DATETIME_MACROS)[number]
 
 export type RawQueryObject = { raw: string; values: Record<string, unknown> }
+export type QueryResult<T = string> = {
+    filter: T
+    fields: string
+    expand: string
+}
 
 export type GeoPoint = { lon: string; lat: string }
 
@@ -103,7 +108,7 @@ export type PathFields<
 > = D extends MaxDepth
     ? never
     : K extends string // This filters out symbol keys
-      ? KeyPathsFields<T, K, MaxDepth, D> // Now K is guaranteed to be string key
+      ? KeyPathsFields<T, K, MaxDepth, D> | '*' // Now K is guaranteed to be string key
       : never
 
 type KeyPathsFields<
@@ -112,11 +117,15 @@ type KeyPathsFields<
     MaxDepth extends number,
     D extends number,
 > = T[K] extends string
-    ? `${K}`
+    ?
+          | `${K}`
+          | `${K}:excerpt(${number},${boolean})`
+          | `${K}:excerpt(${number}, ${boolean})`
     : T[K] extends readonly object[]
       ?
             | `${K}`
             | `expand.${K}`
+            | `expand.${K}.*`
             | `expand.${K}.${PathFields<T[K][number], MaxDepth, keyof T[K][number], DepthCounter[D]>}`
             | `${string}_via_${string}`
             | `expand.${string}_via_${string}`
@@ -133,6 +142,7 @@ type KeyPathsFields<
               ?
                     | `${K}`
                     | `expand.${K}`
+                    | `expand.${K}.*`
                     | `expand.${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
                     | `${string}_via_${string}`
                     | `expand.${string}_via_${string}`
@@ -188,34 +198,101 @@ export type HandleModifier<V, Modifier extends string> = Modifier extends 'each'
 export interface QueryBuilderStart<T, MaxDepth extends number = 6>
     extends QueryBuilder<T, MaxDepth> {
     /**
-     * Matches records where `key` equals `value`.
+     * **_Starter_** - This can only be used once, at the start.
+     *
+     * Select which fields to return from PocketBase. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
+     *
+     * Modifiers:
+     * - `*` targets all keys from the specific depth level.
+     * - `:excerpt(maxLength, withEllipsis?)` returns a short plain text version of the field string value.
      *
      * @example
-     * pbQuery<Post>().select([
-     *     'title',
-     *     'author.email',
-     *     'author.name',
-     *     'author.profilePicture',
-     * ]); // 'title, author.email, author.name, author.profilePicture'
+     * const query = pbQuery<Post>()
+     *     .fields([
+     *         'title',
+     *         'content:excerpt(100,true)',
+     *         'author', // Be aware that `author` is not the same as `expand.author`.
+     *         'expand.author.name',
+     *         'expand.comments_via_post',
+     *     ])
+     *     .search(['title', 'content', 'tags', 'author.name'], 'Football')
+     *     .build(pb.filter)
      *
-     * @example
-     * pbQuery<Post>().select([
-     *     'title',
-     *     { author: ['email', 'name', 'profilePicture'] },
-     * ]); // 'title, author.email, author.name, author.profilePicture'
+     * console.log(query.filter) // Output: "(title~'Football' || content~'Football' || tags~'Football' || author.name~'Football')"
+     * console.log(query.fields) // Output: 'title,content:excerpt(100,true),author,expand.author,expand.comments_via_post'
+     * console.log(query.expand) // Output: 'author,comments_via_post'
+     *
+     * const records = await pb.collection('posts').getList(1, 20, query)
+     *
+     * console.log(records)
+     * // Output:
+     * // [
+     * //     {
+     * //         author: 'authorId',
+     * //         title: 'Football match this Saturday',
+     * //         content: 'Lorem ipsum dolor sit amet.',
+     * //         expand: {
+     * //             author: {
+     * //                 name: 'John',
+     * //             },
+     * //             comments_via_post: [
+     * //                 { ... },
+     * //             ],
+     * //         },
+     * //     },
+     * // ]
      */
     fields(keys: PathFields<T, MaxDepth>[]): QueryBuilder<T, MaxDepth>
 
     /**
-     * `expand()` is not needed if `select()`, we automatically include what to expand.
+     * **_Starter_** - This can only be used once, at the start.
+     *
+     * `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
+     *
+     * Notes:
+     * - Supports up to 6-levels depth nested relations expansion.
+     * - The expanded relations will be appended to the record under the [`expand`](https://pocketbase.io/docs/working-with-relations/#expanding-relations) property (e.g. `"expand": { "relField1": { ... }, ... }`).
+     * - Only the relations to which the request user has permissions to view will be expanded.
+     *
+     * Read more about [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations) in the [official documentation](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
      *
      * @example
-     * pbQuery<Post>().expand(['author', 'comments_via_postId']); // 'author, comments_via_postId'
+     * const query = pbQuery<Post>()
+     *     .fields([
+     *         'title',
+     *         'content:excerpt(100,true)',
+     *         'author', // Be aware that `author` is not the same as `expand.author`.
+     *         'expand.author.name',
+     *         'expand.comments_via_post',
+     *     ])
+     *     .search(['title', 'content', 'tags', 'author.name'], 'Football')
+     *     .build(pb.filter)
+     *
+     * console.log(query.filter) // Output: "(title~'Football' || content~'Football' || tags~'Football' || author.name~'Football')"
+     * console.log(query.fields) // Output: ''
+     * console.log(query.expand) // Output: 'author,comments_via_post'
+     *
+     * const records = await pb.collection('posts').getList(1, 20, query)
+     *
+     * console.log(records)
+     * // Output:
+     * // [
+     * //     {
+     * //         expand: {
+     * //             author: { ... },
+     * //             comments_via_post: [
+     * //                 { ... },
+     * //             ],
+     * //         },
+     * //         ...,
+     * //     },
+     * // ]
      */
     expand(keys: PathExpand<T, MaxDepth>[]): QueryBuilder<T, MaxDepth>
 }
 
-export interface QueryBuilder<T, MaxDepth extends number = 6> {
+export interface QueryBuilder<T, MaxDepth extends number = 6>
+    extends QueryBuilderEnd {
     /**
      * Matches records where `key` equals `value`.
      *
@@ -489,7 +566,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
      *
      * @example
      * // Full text search
-     * pbQuery<Post>().search(['title', 'content', 'tags', 'author.name', 'author.surname'], 'Football'); // (title~'Football' || content~'Football' || tags~'Football' || author.name~'Football' || author.surname~'Football')
+     * pbQuery<Post>().search(['title', 'content', 'tags', 'author.name'], 'Football'); // (title~'Football' || content~'Football' || tags~'Football' || author.name~'Football')
      *
      * @example
      * // Contains
@@ -621,38 +698,10 @@ export interface QueryBuilder<T, MaxDepth extends number = 6> {
             q: QueryBuilder<T, MaxDepth>,
         ) => RestrictedQueryBuilder<T, MaxDepth>,
     ): RestrictedQueryBuilder<T, MaxDepth>
-
-    /**
-     * Returns the query string and values.
-     *
-     * @example
-     * // We recommend using Pocketbase's native `pb.filter()` function
-     * const query = pbQuery<User>().equal('name', 'Alice').build(pb.filter);
-     *
-     * // You can also filter it later
-     * const query = pbQuery<User>().equal('name', 'Alice').build();
-     * console.log(query.raw); // name={:name1}
-     * console.log(query.values); // { name: 'Alice' }
-     * console.log(pb.filter(query.raw, query.values)); // name='Alice'
-     */
-    build(): {
-        filter: { raw: string; values: Record<string, unknown> }
-        fields: string
-        expand: string
-    }
-    build(filter: FilterFunction): {
-        filter: string
-        fields: string
-        expand: string
-    }
-    build(filter?: FilterFunction): {
-        filter: { raw: string; values: Record<string, unknown> } | string
-        fields: string
-        expand: string
-    }
 }
 
-export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6> {
+export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6>
+    extends QueryBuilderEnd {
     /**
      * Combines the previous and the next conditions with an `and` logical operator.
      *
@@ -667,33 +716,59 @@ export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6> {
      * pbQuery<User>().equal('name', 'Alice').or().equal('name', 'Bob'); // name='Alice' || name='Bob'
      */
     or(): Omit<QueryBuilder<T, MaxDepth>, 'build'>
+}
 
+export interface QueryBuilderEnd {
     /**
-     * Returns the query string and values.
+     * Returns an object with `filter`, `fields` and `expand`. Read more in the [official documentation](https://pocketbase.io/docs/api-records/#listsearch-records).
+     *
+     * If a filter function is not provided (e.g. PocketBase's native `pb.filter`) as a parameter we return an object with the query string and values inside `filter`.
      *
      * @example
-     * // We recommend using Pocketbase's native `pb.filter()` function
      * const query = pbQuery<User>().equal('name', 'Alice').build(pb.filter);
      *
      * // You can also filter it later
-     * const query = pbQuery<User>().equal('name', 'Alice').build();
-     * console.log(query.raw); // name={:name1}
-     * console.log(query.values); // { name: 'Alice' }
-     * console.log(pb.filter(query.raw, query.values)); // name='Alice'
+     * const { filter } = pbQuery<User>().equal('name', 'Alice').build();
+     * console.log(filter); // { raw: 'name={:name1}', values: { name1: 'Alice' } }
+     * console.log(pb.filter(filter.raw, filter.values)); // name='Alice'
+     *
+     * @example
+     * const query = pbQuery<Post>()
+     *     .fields([
+     *         'title',
+     *         'content:excerpt(100,true)',
+     *         'author',
+     *         'expand.author.name',
+     *         'expand.comments_via_post',
+     *     ]) // Optional
+     *     .search(['title', 'content', 'tags', 'author.name'], 'Football')
+     *     .build(pb.filter)
+     *
+     * console.log(query.filter) // Output: "(title~'Football' || content~'Football' || tags~'Football' || author.name~'Football')"
+     * console.log(query.fields) // Output: 'title,content:excerpt(100,true),author,expand.author,expand.comments_via_post'
+     * console.log(query.expand) // Output: 'author,comments_via_post'
+     *
+     * const records = await pb.collection('posts').getList(1, 20, query)
+     *
+     * console.log(records)
+     * // Output:
+     * // [
+     * //     {
+     * //         author: 'authorId',
+     * //         title: 'Football match this Saturday',
+     * //         content: 'Lorem ipsum dolor sit amet.',
+     * //         expand: {
+     * //             author: {
+     * //                 name: 'John',
+     * //             },
+     * //             comments_via_post: [
+     * //                 { ... },
+     * //             ],
+     * //         },
+     * //     },
+     * // ]
      */
-    build(): {
-        filter: RawQueryObject
-        fields: string
-        expand: string
-    }
-    build(filter: FilterFunction): {
-        filter: string
-        fields: string
-        expand: string
-    }
-    build(filter?: FilterFunction): {
-        filter: RawQueryObject | string
-        fields: string
-        expand: string
-    }
+    build(): QueryResult<RawQueryObject>
+    build(filter: FilterFunction): QueryResult<string>
+    build(filter?: FilterFunction): QueryResult<RawQueryObject | string>
 }

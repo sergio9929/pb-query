@@ -195,16 +195,10 @@ export type HandleModifier<V, Modifier extends string> = Modifier extends 'each'
         ? string
         : never
 
-export type QueryBuilderStart<
+export interface QueryBuilderStart<
     T,
     MaxDepth extends number = 6,
-    Ex extends keyof QueryBuilderStartReal<T, MaxDepth> | '' = '',
-> = Omit<QueryBuilderStartReal<T, MaxDepth, Ex>, Ex>
-
-interface QueryBuilderStartReal<
-    T,
-    MaxDepth extends number = 6,
-    Ex extends keyof QueryBuilderStartReal<T, MaxDepth> | '' = '',
+    Once extends keyof QueryBuilderStart<T, MaxDepth> | '' = '',
 > extends QueryBuilder<T, MaxDepth> {
     /**
      * **_Starter_** - This can only be used once, at the start.
@@ -265,7 +259,7 @@ interface QueryBuilderStartReal<
      */
     fields<P extends PathFields<T, MaxDepth>[]>(
         keys: P,
-    ): QueryBuilderStart<T, MaxDepth, Ex | 'fields'>
+    ): Omit<QueryBuilderStart<T, MaxDepth, Once | 'fields'>, Once | 'fields'>
 
     /**
      * **_Starter_** - This can only be used once, at the start.
@@ -312,7 +306,7 @@ interface QueryBuilderStartReal<
      */
     expand<P extends PathExpand<T, MaxDepth>[]>(
         keys: P,
-    ): QueryBuilderStart<T, MaxDepth, Ex | 'expand'>
+    ): Omit<QueryBuilderStart<T, MaxDepth, Once | 'expand'>, Once | 'expand'>
 }
 
 export interface QueryBuilder<T, MaxDepth extends number = 6>

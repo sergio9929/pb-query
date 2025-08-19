@@ -168,15 +168,21 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
     const queryBuilderStart: QueryBuilderStart<T, MaxDepth> = {
         ...queryBuilder,
         fields(keys) {
+            if (fields) {
+                console.warn('Overriding previous fields:', fields)
+            }
             fields = generateFields(keys)
-            expand = generateExpand(prepareFieldsForExpand(keys))
+            expand ||= generateExpand(prepareFieldsForExpand(keys))
 
-            return queryBuilder
+            return queryBuilderStart
         },
         expand(keys) {
+            if (expand) {
+                console.warn('Overriding previous expand:', expand)
+            }
             expand = generateExpand(keys)
 
-            return queryBuilder
+            return queryBuilderStart
         },
     }
 

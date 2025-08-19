@@ -207,7 +207,7 @@ test('date macros', () => {
     expect(query3.filter).toBe("created>'@test'")
 })
 
-test('select', () => {
+test('fields', () => {
     const query1 = pbQuery<Post>()
         .fields([
             '*',
@@ -259,8 +259,22 @@ test('expand', () => {
             'author.a_via_b.record.b_via_c',
             'related',
         ])
+        .fields(['related'])
         .build(filter)
     expect(query1.expand).toBe(
+        ['author.a_via_b.record.b_via_c', 'related'].join(','),
+    )
+
+    const query2 = pbQuery<Post>()
+        .fields(['related'])
+        .expand([
+            'author',
+            'author.a_via_b',
+            'author.a_via_b.record.b_via_c',
+            'related',
+        ])
+        .build(filter)
+    expect(query2.expand).toBe(
         ['author.a_via_b.record.b_via_c', 'related'].join(','),
     )
 })

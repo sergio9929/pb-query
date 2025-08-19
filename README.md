@@ -2,7 +2,7 @@
 
 # pb-query 🔍✨
 
-**Build type-safe PocketBase queries with the power of TypeScript.**  
+**Build type-safe PocketBase queries with the power of TypeScript.**
 *Flexible and strongly-typed, with useful helpers to simplify the querying process.*
 
 [![npm](https://img.shields.io/npm/v/@sergio9929/pb-query)](https://www.npmjs.com/package/@sergio9929/pb-query)
@@ -34,6 +34,15 @@ pnpm add @sergio9929/pb-query
 yarn add @sergio9929/pb-query
 ```
 
+## Version Compatibility
+
+You are reading the documentation for versions equal or higher to `pb-query@0.3.0`.
+
+| PocketBase | pb-query | documentation |
+| - | - | - |
+| >= 0.22.0 | >= 0.3.0 | current |
+| >= 0.22.0 | <= 0.2.9 | [read](https://github.com/sergio9929/pb-query/tree/a62a71887a7cb8f6328f35ee6b57480bdf8bfc5f) |
+
 ## Quick Start
 
 ### App
@@ -50,26 +59,37 @@ const pb = new PocketBase("https://example.com");
 
 // Build a type-safe query for posts
 const query = pbQuery<Post>()
+  .fields([
+    'title',
+    'content:excerpt(100,true)',
+    'author',
+    'expand.author.name', // Automatically expanded
+    'expand.comments_via_post', // Automatically expanded
+  ]) // Optional
   .search(['title', 'content', 'tags', 'author'], 'footba')
   .and()
   .between('created', new Date('2023-01-01'), new Date('2023-12-31'))
   .or()
-  .group((q) => 
+  .group((q) =>
     q.anyLike('tags', 'sports')
       .and()
       .greaterThan('priority', 5)
   )
   .build(pb.filter);
 
-console.log(query);
-// (title~'footba' || content~'footba' || tags~'footba' || author~'footba') 
-// && (created>='2023-01-01 00:00:00.000Z' && created<='2023-12-31 00:00:00.000Z') 
-// || (tags?~'sports' && priority>5)
+console.log(query.expand);
+// Output: 'author,comments_via_post'
+
+console.log(query.fields);
+// Output: 'title,content:excerpt(100,true),author,expand.author,expand.comments_via_post'
+
+console.log(query.filter);
+// Output: "(title~'footba' || content~'footba' || tags~'footba' || author~'footba')
+// && (created>='2023-01-01 00:00:00.000Z' && created<='2023-12-31 00:00:00.000Z')
+// || (tags?~'sports' && priority>5)"
 
 // Use your query
-const records = await pb.collection("posts").getList(1, 20, {
-  filter: query,
-});
+const records = await pb.collection("posts").getList(1, 20, query);
 ```
 
 > [!IMPORTANT]
@@ -87,7 +107,7 @@ const records = await pb.collection("posts").getList(1, 20, {
 routerAdd("GET", "/example", (e) => {
   const { pbQuery } = require('@sergio9929/pb-query');
 
-  const { raw, values } = pbQuery()
+  const { filter } = pbQuery()
     .search(['title', 'content', 'tags.title', 'author'], 'footba')
     .and()
     .between('created', new Date('2023-01-01'), new Date('2024-12-31'))
@@ -101,11 +121,11 @@ routerAdd("GET", "/example", (e) => {
 
   const records = $app.findRecordsByFilter(
     'posts',
-    raw,
+    filter.raw,
     '',
     20,
     0,
-    values,
+    filter.values,
   );
 
   return e.json(200, records);
@@ -120,8 +140,8 @@ routerAdd("GET", "/example", (e) => {
 - 🧩 [Combination Operators](#combination-operators)
 - 🛠️ [Multiple Operators](#multiple-operators)
 - ⚡ [Helper Operators](#helper-operators)
+- 🔍 [Fields and Expand](#fields-and-expand)
 - 💡 [Tips and Tricks](#tips-and-tricks)
-- 📜 [Real-World Recipes](#real-world-recipes)
 - 🚨 [Troubleshooting](#troubleshooting)
 - 🙏 [Credits](#credits)
 
@@ -159,7 +179,15 @@ const query = pbQuery<Post>()
   .like('content', 'Top Secret%')
   .build();
 
-console.log(query);  // { raw: 'content~{:content1}', values: { content1: 'Top Secret%' } }
+console.log(query);
+// {
+//   fields: '',
+//   expand: '',
+//   filter: {
+//     raw: 'content~{:content1}',
+//     values: { content1: 'Top Secret%' }
+//   }
+// }
 ```
 
 You can use this principle to create dynamic queries:
@@ -180,12 +208,15 @@ By default, we don't filter your query. Using `.build()` returns the unfiltered 
 
 ```ts
 // ❌ Unfiltered query
-const { raw, values } = pbQuery<Post>()
-  .search(['title', 'content', 'tags', 'author.name', 'author.surname'], 'Football')
+const { filter } = pbQuery<Post>()
+  .like('content', 'Top Secret%')
   .build();
 
-console.log(raw);    // "content~{:content1}"
-console.log(values); // { content1: "Top Secret%" }
+console.log(filter);
+// {
+//   raw: 'content~{:content1}',
+//   values: { content1: 'Top Secret%' }
+// }
 ```
 
 We expose a filter function, but we recommend using the native `pb.filter()` function instead.
@@ -197,11 +228,11 @@ import PocketBase from 'pocketbase';
 const pb = new PocketBase("https://example.com");
 
 // ✅ Filtered query
-const query = pbQuery<Post>()
+const { filter } = pbQuery<Post>()
   .like('content', 'Top Secret%')
   .build(pb.filter); // use PocketBase's filter function
 
-console.log(query);  // "content~'Top Secret%'"
+console.log(filter);  // "content~'Top Secret%'"
 ```
 
 ### Key Modifiers
@@ -580,6 +611,105 @@ Matches records where `key` is not null.
 pbQuery<User>().isNotNull('name'); // name!=''
 ```
 
+## Fields and Expand
+
+### Field Selection
+
+#### `.fields(fields)`
+
+_Since v0.3.0_
+
+**_Starter_** - This can only be used once, at the start.
+
+Select which fields to return from PocketBase. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
+
+Modifiers:
+- `*` – Targets all keys from the specific depth level.
+- `:excerpt(maxLength, withEllipsis?)` – Returns a short plain text version of the field string value.
+
+> [!WARNING]
+> With the key `expand.*` we can't automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
+
+```ts
+const query = pbQuery<Post>()
+  .fields([
+    'title',                       // Basic field
+    'content:excerpt(100,true)',   // Field with excerpt modifier
+    'author',                      // Relation ID field
+    'expand.author',               // Expanded relation field
+    'expand.comments_via_post',    // Back-relation expansion
+  ])
+  .build(pb.filter);
+
+console.log(query.fields); // Output: 'title,content:excerpt(100,true),author,expand.author,expand.comments_via_post'
+console.log(query.expand); // Output: 'author,comments_via_post'
+
+const records = await pb.collection('posts').getList(1, 20, query);
+
+console.log(records);
+// Output:
+// [
+//   {
+//     author: 'authorId',
+//     title: 'Football match this Saturday',
+//     content: 'Lorem ipsum dolor sit amet.',
+//     expand: {
+//       author: {
+//         name: 'John',
+//       },
+//       comments_via_post: [
+//         { ... },
+//       ],
+//     },
+//   },
+// ]
+```
+
+### Expand Related Records
+
+#### `.expand(fields)`
+
+_Since v0.3.0_
+
+**_Starter_** - This can only be used once, at the start.
+
+`expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
+
+Notes:
+- Supports up to 6-levels depth nested relations expansion.
+- The expanded relations will be appended to the record under the [`expand`](https://pocketbase.io/docs/working-with-relations/#expanding-relations) property (e.g. `"expand": { "relField1": { ... }, ... }`).
+- Only the relations to which the request user has permissions to view will be expanded.
+
+Read more about [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations) in the [official documentation](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
+
+```ts
+const query = pbQuery<Post>()
+  .expand([
+    'author',
+    'comments_via_post',
+  ])
+  .build(pb.filter);
+
+console.log(query.fields); // Output: ''
+console.log(query.expand); // Output: 'author,comments_via_post'
+
+const records = await pb.collection('posts').getList(1, 20, query);
+
+console.log(records);
+// Output:
+// [
+//   {
+//     expand: {
+//       author: { ... },
+//         comments_via_post: [
+//           { ... },
+//         ],
+//       },
+//     ...,
+//   },
+// ]
+```
+
 ## Tips and tricks
 
 ### Typed Query Builders
@@ -609,7 +739,7 @@ You can clone queries to create new query builders with an initial state. This i
 ```ts
 // Create a base query for sports-related posts
 export const querySportsPosts = () => pbQuery<Post>()
-  .anyLike('tags', 'sports') 
+  .anyLike('tags', 'sports')
   .and(); // Initial condition: ags?~'sports' &&
 
 const searchQuery1 = querySportsPosts()
@@ -628,51 +758,6 @@ const searchQuery2 = querySportsPosts()
 1. **Initial State**: When you clone a query, it captures the current state of the query builder, including all conditions and values.
 2. **Independent Instances**: Each cloned query is independent, so modifying one does not affect the others.
 3. **Reusability**: Cloning is ideal for creating reusable query templates that can be extended with additional conditions.
-
-## 📜 Real-World Recipes
-
-### Paginated Admin Dashboard
-
-```ts
-const buildAdminQuery = (
-  searchTerm: string,
-  options: {
-    minLogins: number;
-    roles: string[];
-    statuses: string[];
-  }
-) => pbQuery<User>()
-  .search(['name', 'email', 'department'], searchTerm)
-  .and()
-  .greaterThanOrEqual('loginCount', options.minLogins)
-  .and()
-  .in('role', options.roles)
-  .and()
-  .group((q) => 
-    q.in('status', options.statuses)
-      .or()
-      .isNull('status')
-  )
-  .build(pb.filter);
-```
-
-### E-Commerce Product Filter
-
-```ts
-const productQuery = pbQuery<Product>()
-  .between('price', minPrice, maxPrice)
-  .and()
-  .anyLike('tags', category)
-  .and()
-  .lessThan('stock', 5)
-  .and()
-  .group((q) => 
-    q.equal('color', selectedColor)
-      .or()
-      .isNotNull('customizationOptions')
-  )
-  .build(pb.filter);
-```
 
 ### Dynamic Search Query
 
@@ -698,7 +783,7 @@ const searchQuery = buildSearchQuery('Top Secret', user);
 
 ### Common Issues
 
-**Problem:** Date comparisons not working  
+**Problem:** Date comparisons not working
 **Fix:** Always use Date objects:
 ```ts
 pbQuery<Post>().between('created', new Date('2023-01-01'), new Date());
@@ -706,22 +791,22 @@ pbQuery<Post>().between('created', new Date('2023-01-01'), new Date());
 
 ### Performance Tips
 
-1. **Set Max Depth for TypeScript**  
-    By default, we infer types up to 6 levels deep. You can change this for each query.
+1. **Set Max Depth for TypeScript**
+By default, we infer types up to 6 levels deep. You can change this for each query.
 
-    For example, this is 3 levels deep:
+For example, this is 3 levels deep:
 
-    ```ts
-    // author.info.age
-    ```
+```ts
+// author.info.age
+```
 
-    ```ts
-    pbQuery<Post, 3>()
-      .equal('author.info.age', 30)
-      .and()
-      .like('author.email', '%@example.com');
-    // author.info.age=30 && author.email~'%@example.com'
-    ```
+```ts
+pbQuery<Post, 3>()
+  .equal('author.info.age', 30)
+  .and()
+  .like('author.email', '%@example.com');
+// author.info.age=30 && author.email~'%@example.com'
+```
 
 
 ## Credits
@@ -733,5 +818,3 @@ This project was inspired by [@emresandikci/pocketbase-query](https://github.com
 **@sergio9929/pb-query** is maintained by [@sergio9929](https://github.com/sergio9929) with ❤️
 
 Found a bug? [Open an issue](https://github.com/sergio9929/pb-query/issues)
-
-Want to contribute? [Read our guide](CONTRIBUTING.md)

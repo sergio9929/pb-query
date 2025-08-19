@@ -5,6 +5,7 @@ import type {
     PathValue,
     QueryBuilder,
     QueryBuilderStart,
+    QueryResult,
     RawQueryObject,
     RestrictedQueryBuilder,
 } from './types'
@@ -78,21 +79,11 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
         }
     }
 
-    function build(): {
-        filter: RawQueryObject
-        fields: string
-        expand: string
-    }
-    function build(filter: FilterFunction): {
-        filter: string
-        fields: string
-        expand: string
-    }
-    function build(filter?: FilterFunction): {
-        filter: RawQueryObject | string
-        fields: string
-        expand: string
-    } {
+    function build(): QueryResult<RawQueryObject>
+    function build(filter: FilterFunction): QueryResult<string>
+    function build(
+        filter?: FilterFunction,
+    ): QueryResult<RawQueryObject | string> {
         if (typeof filter === 'function') {
             return {
                 expand,

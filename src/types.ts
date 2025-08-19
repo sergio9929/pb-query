@@ -219,11 +219,11 @@ interface QueryBuilderStartReal<
      * ```ts
      * const query = pbQuery<Post>()
      *     .fields([
-     *         'title',                       // Basic field
-     *         'content:excerpt(100,true)',   // Field with excerpt modifier
-     *         'author',                      // Relation ID field
-     *         'expand.author',               // Expanded relation field
-     *         'expand.comments_via_post',    // Back-relation expansion
+     *         'title',                     // Basic field
+     *         'content:excerpt(100,true)', // Field with excerpt modifier
+     *         'author',                    // Relation ID field
+     *         'expand.author',             // Expanded relation field
+     *         'expand.comments_via_post',  // Back-relation expansion
      *     ])
      *     .build(pb.filter);
      *
@@ -828,15 +828,15 @@ export interface QueryBuilderEnd {
      *         'expand.comments_via_post',
      *     ]) // Optional
      *     .search(['title', 'content', 'tags', 'author.name'], 'Football')
-     *     .build(pb.filter)
+     *     .build(pb.filter);
      *
-     * console.log(query.filter) // Output: "(title~'Football' || content~'Football' || tags~'Football' || author.name~'Football')"
-     * console.log(query.fields) // Output: 'title,content:excerpt(100,true),author,expand.author,expand.comments_via_post'
-     * console.log(query.expand) // Output: 'author,comments_via_post'
+     * console.log(query.filter); // Output: "(title~'Football' || content~'Football' || tags~'Football' || author.name~'Football')"
+     * console.log(query.fields); // Output: 'title,content:excerpt(100,true),author,expand.author,expand.comments_via_post'
+     * console.log(query.expand); // Output: 'author,comments_via_post'
      *
-     * const records = await pb.collection('posts').getList(1, 20, query)
+     * const records = await pb.collection('posts').getList(1, 20, query);
      *
-     * console.log(records)
+     * console.log(records);
      * // Output:
      * // [
      * //     {

@@ -251,6 +251,16 @@ interface QueryBuilderStartReal<
      * // ]
      * ```
      *
+     * @example
+     * With the key `expand.*` we can't automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations), so you must specify it manually.
+     *
+     * ```ts
+     * const query = pbQuery<Post>()
+     *   .fields(['title', 'expand.*'])
+     *   .expand(['author', 'comments_via_post'])
+     *   .build(pb.filter);
+     * ```
+     *
      * @since 0.3.0
      */
     fields<P extends PathFields<T, MaxDepth>[]>(

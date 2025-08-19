@@ -627,9 +627,6 @@ Modifiers:
 - `*` – Targets all keys from the specific depth level.
 - `:excerpt(maxLength, withEllipsis?)` – Returns a short plain text version of the field string value.
 
-> [!WARNING]
-> With the key `expand.*` we can't automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
-
 ```ts
 const query = pbQuery<Post>()
   .fields([
@@ -664,6 +661,15 @@ console.log(records);
 //   },
 // ]
 ```
+
+> [!WARNING]
+> With the key `expand.*` we can't automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations), so you must specify it manually.
+> ```ts
+> const query = pbQuery<Post>()
+>   .fields(['title', 'expand.*'])
+>   .expand(['author', 'comments_via_post'])
+>   .build(pb.filter);
+> ```
 
 ### Expand Related Records
 

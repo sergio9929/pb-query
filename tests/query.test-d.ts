@@ -1,6 +1,12 @@
 import { assertType, expectTypeOf, test } from 'vitest'
 import { pbQuery } from '../src/query'
-import type { Path, RawQueryObject } from '../src/types'
+import type {
+    GeoPoint,
+    Path,
+    PathExpand,
+    PathFields,
+    RawQueryObject,
+} from '../src/types'
 import { filter } from '../src/utils'
 
 interface User {
@@ -9,6 +15,7 @@ interface User {
     age: number
     city: string
     permissions: string[]
+    location: GeoPoint
 }
 
 interface Category {
@@ -33,8 +40,8 @@ interface Post {
 test('build function types', () => {
     const { build } = pbQuery<Post>()
 
-    assertType<string>(build(filter))
-    assertType<RawQueryObject>(build())
+    assertType<string>(build(filter).filter)
+    assertType<RawQueryObject>(build().filter)
 })
 
 test('all possible keys', () => {
@@ -59,6 +66,23 @@ test('all possible keys', () => {
     equal('isVisible', true).build()
     equal('user', 'hola').build()
     equal('user.age', 18).build()
+
+    expectTypeOf<'user'>().toMatchTypeOf<PathExpand<Post, 6>>()
+    expectTypeOf<'user.location'>().not.toMatchTypeOf<PathExpand<Post, 6>>()
+    expectTypeOf<'created'>().not.toMatchTypeOf<PathExpand<Post, 6>>()
+
+    expectTypeOf<'*'>().toMatchTypeOf<PathFields<Post, 6>>()
+    expectTypeOf<'user'>().toMatchTypeOf<PathFields<Post, 6>>()
+    expectTypeOf<'expand.user'>().toMatchTypeOf<PathFields<Post, 6>>()
+    expectTypeOf<'expand.user.*'>().toMatchTypeOf<PathFields<Post, 6>>()
+    expectTypeOf<'expand.user.name'>().toMatchTypeOf<PathFields<Post, 6>>()
+    expectTypeOf<'content:excerpt(100,true)'>().toMatchTypeOf<
+        PathFields<Post, 6>
+    >()
+    expectTypeOf<'expand.location'>().not.toMatchTypeOf<PathFields<User, 6>>()
+    expectTypeOf<'location'>().toMatchTypeOf<PathFields<User, 6>>()
+    expectTypeOf<'location.lon'>().toMatchTypeOf<PathFields<User, 6>>()
+
     expectTypeOf<'anything_via_user'>().not.toMatchTypeOf<Path<Post, 6>>()
     equal('anything_via_user.anything', new Date()).build()
 })

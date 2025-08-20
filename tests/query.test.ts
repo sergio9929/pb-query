@@ -1,6 +1,7 @@
 import PocketBase from 'pocketbase'
 import { expect, test } from 'vitest'
 import { pbQuery } from '../src/query'
+import type { GeoPoint } from '../src/types'
 import { filter } from '../src/utils'
 
 interface User {
@@ -9,6 +10,7 @@ interface User {
     age: number
     city: string
     permissions: string[]
+    location: GeoPoint
     created: Date
     updated: Date
 }
@@ -72,13 +74,13 @@ test('filter discrepancy', () => {
         .custom(pb.filter('content~{:content}', { content: 'test' }))
         .build(pb.filter)
 
-    expect(query1).toBe(query2)
+    expect(query1.filter).toBe(query2.filter)
 })
 
 test('post query', () => {
     const postQuery = pbQuery<Post>
 
-    expect(postQuery().equal('author.name', 'John').build(filter)).toBe(
+    expect(postQuery().equal('author.name', 'John').build(filter).filter).toBe(
         "author.name='John'",
     )
     expect(
@@ -86,7 +88,7 @@ test('post query', () => {
             .equal('author.name', 'John')
             .and()
             .equal('author.age', 20)
-            .build(filter),
+            .build(filter).filter,
     ).toBe("author.name='John' && author.age=20")
 })
 
@@ -99,7 +101,9 @@ test('multiple queries', () => {
         .equal('city', 'New York')
         .build(filter)
 
-    expect(query).toBe("name='John' && (age!=20 || age!=30) && city='New York'")
+    expect(query.filter).toBe(
+        "name='John' && (age!=20 || age!=30) && city='New York'",
+    )
 
     const query1 = pbQuery<Post>()
         .equal('author.name', 'John')
@@ -119,7 +123,7 @@ test('multiple queries', () => {
         .custom(filter('content~{:content}', { content: 'test' }))
         .build()
 
-    expect(filter(query1.raw, query1.values)).toBe(
+    expect(filter(query1.filter.raw, query1.filter.values)).toBe(
         "author.name='John' && (title?!~'foo' || title?~'bar') && (author.age=20 || author.age=30 || author.age=40) && (created>='2021-01-01 00:00:00.000Z' && created<='2021-12-31 00:00:00.000Z') && (author.age<20 || author.age>30) && (author.city='New York' || author.city='Los Angeles') && (author.city!='Chicago' && author.city!='Miami') && content~'test'",
     )
 
@@ -131,7 +135,7 @@ test('multiple queries', () => {
         .group((q) => q.equal('name', 'Alice').or().equal('name', 'Bob'))
         .build(filter)
 
-    expect(groupTest).toBe(
+    expect(groupTest.filter).toBe(
         "name='Alice' || name='Bob' && (name='Alice' || name='Bob')",
     )
 })
@@ -154,7 +158,7 @@ test('nested groups', () => {
         )
         .build(filter)
 
-    expect(groupTest).toBe(
+    expect(groupTest.filter).toBe(
         "name='Alice' || name='Bob' && (name='Alice' || name='Bob') && (name!='' && (name='Alice' || name='Bob'))",
     )
 })
@@ -164,7 +168,7 @@ test('back-relations', () => {
         .equal('anything_via_author.anything', new Date('2021-12-31'))
         .build(filter)
 
-    expect(groupTest).toBe(
+    expect(groupTest.filter).toBe(
         "anything_via_author.anything='2021-12-31 00:00:00.000Z'",
     )
 })
@@ -176,29 +180,108 @@ test('cloned query', () => {
     const searchQuery1 = querySportsPosts()
         .search(['title', 'content', 'tags', 'author'], 'basketba')
         .build(pb.filter)
-    expect(searchQuery1).toBe(
+    expect(searchQuery1.filter).toBe(
         "tags?~'sports' && (title~'basketba' || content~'basketba' || tags~'basketba' || author~'basketba')",
     )
 
     const searchQuery2 = querySportsPosts()
         .search(['title', 'content', 'tags', 'author'], 'footba')
         .build(pb.filter)
-    expect(searchQuery2).toBe(
+    expect(searchQuery2.filter).toBe(
         "tags?~'sports' && (title~'footba' || content~'footba' || tags~'footba' || author~'footba')",
     )
 })
 
 test('date macros', () => {
     const query1 = pbQuery<Post>().greaterThan('created', '@now').build(filter)
-    expect(query1).toBe('created>@now')
+    expect(query1.filter).toBe('created>@now')
 
     const query2 = pbQuery<Post>()
         .between('created', '@now', '@yesterday')
         .build(filter)
-    expect(query2).toBe('(created>=@now && created<=@yesterday)')
+    expect(query2.filter).toBe('(created>=@now && created<=@yesterday)')
 
     const query3 = pbQuery<Post>()
         .greaterThan('created', '@test' as '@now')
         .build(filter)
-    expect(query3).toBe("created>'@test'")
+    expect(query3.filter).toBe("created>'@test'")
+})
+
+test('fields', () => {
+    const query1 = pbQuery<Post>()
+        .fields([
+            '*',
+            'title',
+            'tags',
+            'content:excerpt(100,true)',
+            'author',
+            'expand.author.location.lon',
+            'expand.author.location.lat',
+            'expand.author.city',
+            'expand.author.age',
+            'expand.author.expand.a_via_b',
+            'expand.author.expand.a_via_b.expand.record.expand.b_via_c',
+            'related',
+            'expand.related.*',
+        ])
+        .build(filter)
+    expect(query1.fields).toBe(
+        [
+            '*',
+            'title',
+            'tags',
+            'content:excerpt(100,true)',
+            'author',
+            'expand.author.location.lon',
+            'expand.author.location.lat',
+            'expand.author.city',
+            'expand.author.age',
+            'expand.author.expand.a_via_b',
+            'expand.author.expand.a_via_b.expand.record.expand.b_via_c',
+            'related',
+            'expand.related.*',
+        ].join(','),
+    )
+    expect(query1.expand).toBe(
+        ['author.a_via_b.record.b_via_c', 'related'].join(','),
+    )
+
+    const query2 = pbQuery<Post>().build(filter)
+    expect(query2.fields).toBe('')
+    expect(query2.expand).toBe('')
+
+    const query3 = pbQuery<Post>().fields('*').build(filter)
+    expect(query3.fields).toBe('*')
+    expect(query3.expand).toBe('')
+})
+
+test('expand', () => {
+    const query1 = pbQuery<Post>()
+        .expand([
+            'author',
+            'author.a_via_b',
+            'author.a_via_b.record.b_via_c',
+            'related',
+        ])
+        .fields(['related'])
+        .build(filter)
+    expect(query1.expand).toBe(
+        ['author.a_via_b.record.b_via_c', 'related'].join(','),
+    )
+
+    const query2 = pbQuery<Post>()
+        .fields(['related'])
+        .expand([
+            'author',
+            'author.a_via_b',
+            'author.a_via_b.record.b_via_c',
+            'related',
+        ])
+        .build(filter)
+    expect(query2.expand).toBe(
+        ['author.a_via_b.record.b_via_c', 'related'].join(','),
+    )
+
+    const query3 = pbQuery<Post>().expand('author').build(filter)
+    expect(query3.expand).toBe(['author'].join(','))
 })

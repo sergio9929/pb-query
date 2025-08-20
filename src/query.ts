@@ -4,16 +4,25 @@ import type {
     Path,
     PathValue,
     QueryBuilder,
+    QueryBuilderStart,
+    QueryResult,
     RawQueryObject,
     RestrictedQueryBuilder,
 } from './types'
-import { isDateMacro } from './utils'
+import {
+    generateExpand,
+    generateFields,
+    isDateMacro,
+    prepareFieldsForExpand,
+} from './utils'
 
-export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
+export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
     T,
     MaxDepth
 > {
     let query = ''
+    let fields = ''
+    let expand = ''
 
     const keyCounter = new Map<Path<T, MaxDepth>, number>()
     const valueMap = new Map<string, unknown>()
@@ -70,13 +79,23 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
         }
     }
 
-    function build(): RawQueryObject
-    function build(filter: FilterFunction): string
-    function build(filter?: FilterFunction): RawQueryObject | string {
+    function build(): QueryResult<RawQueryObject>
+    function build(filter: FilterFunction): QueryResult<string>
+    function build(
+        filter?: FilterFunction,
+    ): QueryResult<RawQueryObject | string> {
         if (typeof filter === 'function') {
-            return filter(query, Object.fromEntries(valueMap))
+            return {
+                expand,
+                fields,
+                filter: filter(query, Object.fromEntries(valueMap)),
+            }
         }
-        return { raw: query, values: Object.fromEntries(valueMap) }
+        return {
+            expand,
+            fields,
+            filter: { raw: query, values: Object.fromEntries(valueMap) },
+        }
     }
 
     const queryBuilder: QueryBuilder<T, MaxDepth> = {
@@ -146,6 +165,31 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
         build,
     }
 
+    const queryBuilderStart: QueryBuilderStart<T, MaxDepth> = {
+        ...queryBuilder,
+        fields(keys) {
+            if (fields) {
+                console.warn('Overriding previous fields:', fields)
+            }
+
+            const normalizedKeys = Array.isArray(keys) ? keys : [keys]
+            fields = generateFields(normalizedKeys)
+            expand ||= generateExpand(prepareFieldsForExpand(normalizedKeys))
+
+            return queryBuilderStart
+        },
+        expand(keys) {
+            if (expand) {
+                console.warn('Overriding previous expand:', expand)
+            }
+
+            const normalizedKeys = Array.isArray(keys) ? keys : [keys]
+            expand = generateExpand(normalizedKeys)
+
+            return queryBuilderStart
+        },
+    }
+
     const restrictedQueryBuilder: RestrictedQueryBuilder<T, MaxDepth> = {
         and() {
             query += ' && '
@@ -158,5 +202,5 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilder<
         build,
     }
 
-    return queryBuilder
+    return queryBuilderStart
 }

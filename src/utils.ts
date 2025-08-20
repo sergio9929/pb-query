@@ -55,3 +55,54 @@ function isMacro(value: unknown): value is string {
 
     return value.length > 1 && value.startsWith('@')
 }
+
+export function generateFields(keys: string[]) {
+    const uniqueKeys = [...new Set(keys)]
+
+    return uniqueKeys.join(',')
+}
+
+export function prepareFieldsForExpand(keys: string[]) {
+    const uniqueKeys = [...new Set(keys)]
+
+    const preparedKeys = uniqueKeys.map((key) => {
+        const words = key.split('expand.')
+        if (words.length > 1) {
+            return words
+                .map((word) => {
+                    const dotIndex = word.indexOf('.')
+                    return word.slice(0, dotIndex < 0 ? word.length : dotIndex)
+                })
+                .filter(Boolean)
+                .join('.')
+        }
+
+        return ''
+    })
+
+    return [...new Set(preparedKeys)]
+}
+
+export function generateExpand(keys: string[]) {
+    const uniqueKeys = [...new Set(keys)]
+
+    return uniqueKeys
+        .reduce((acc, word, wordIndex, arr) => {
+            const canBeIgnored = arr.some((x, xIndex) => {
+                if (wordIndex === xIndex) {
+                    return false
+                }
+
+                if (x?.startsWith(word)) {
+                    return true
+                }
+            })
+
+            if (!canBeIgnored) {
+                acc.push(word)
+            }
+
+            return acc
+        }, [] as string[])
+        .join(',')
+}

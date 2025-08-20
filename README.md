@@ -619,7 +619,7 @@ pbQuery<User>().isNotNull('name'); // name!=''
 
 _Since v0.3.0_
 
-**_Starter_** - This can only be used once, at the start.
+**_Starter_**, **_Once_** - This can only be used once, at the start.
 
 Select which fields to return from PocketBase. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
 
@@ -680,7 +680,7 @@ console.log(records);
 
 _Since v0.3.0_
 
-**_Starter_** - This can only be used once, at the start.
+**_Starter_**, **_Once_** - This can only be used once, at the start.
 
 `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations). If used together with `fields()`, it overrides the automatic expansion.
 

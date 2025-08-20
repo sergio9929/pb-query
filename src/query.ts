@@ -12,6 +12,7 @@ import type {
 import {
     generateExpand,
     generateFields,
+    generateSort,
     isDateMacro,
     prepareFieldsForExpand,
 } from './utils'
@@ -23,6 +24,7 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
     let query = ''
     let fields = ''
     let expand = ''
+    let sort = ''
 
     const keyCounter = new Map<Path<T, MaxDepth>, number>()
     const valueMap = new Map<string, unknown>()
@@ -89,12 +91,14 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
                 expand,
                 fields,
                 filter: filter(query, Object.fromEntries(valueMap)),
+                sort,
             }
         }
         return {
             expand,
             fields,
             filter: { raw: query, values: Object.fromEntries(valueMap) },
+            sort,
         }
     }
 
@@ -162,6 +166,16 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
             query += ')'
             return restrictedQueryBuilder
         },
+        sort(keys) {
+            if (sort) {
+                console.warn('Overriding previous sort:', sort)
+            }
+
+            const normalizedKeys = Array.isArray(keys) ? keys : [keys]
+            sort = generateSort(normalizedKeys)
+
+            return queryBuilder
+        },
         build,
     }
 
@@ -198,6 +212,16 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
         or() {
             query += ' || '
             return queryBuilder
+        },
+        sort(keys) {
+            if (sort) {
+                console.warn('Overriding previous sort:', sort)
+            }
+
+            const normalizedKeys = Array.isArray(keys) ? keys : [keys]
+            sort = generateSort(normalizedKeys)
+
+            return restrictedQueryBuilder
         },
         build,
     }

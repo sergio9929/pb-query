@@ -14,6 +14,7 @@ export type QueryResult<T = string> = {
     filter: T
     fields: string
     expand: string
+    sort: string
 }
 
 export type GeoPoint = { lon: string; lat: string }
@@ -165,6 +166,51 @@ export type PathFields<
             | '*'
       : never
 
+export type PathSort<
+    T,
+    MaxDepth extends number,
+    K extends keyof T = keyof T,
+    D extends number = 0,
+> = D extends MaxDepth
+    ? never
+    : K extends string // This filters out symbol keys, now K is guaranteed to be string key
+      ? '@random' | '@rowid' | SortKey<PathSortLoop<T, MaxDepth, K, D>>
+      : never
+
+export type PathSortLoop<
+    T,
+    MaxDepth extends number,
+    K extends keyof T = keyof T,
+    D extends number = 0,
+> = D extends MaxDepth
+    ? never
+    : K extends string // This filters out symbol keys, now K is guaranteed to be string key
+      ? PathHelper<
+            T,
+            K,
+            // Text
+            `${K}`,
+            // Date
+            `${K}`,
+            // GeoPoint
+            `${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`,
+            // Multiple
+            `${K}`,
+            // Relation
+            | `${K}`
+            | `${K}.${PathSortLoop<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+            | `${string}_via_${string}.${string}`,
+            // Multiple Relation
+            | `${K}`
+            | `${K}.${PathSortLoop<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
+            | `${string}_via_${string}.${string}`,
+            // Other
+            `${K}`
+        >
+      : never
+
+type SortKey<K extends string> = `${K}` | `-${K}` | `+${K}`
+
 type PathValueHelper<
     T,
     P extends string,
@@ -235,10 +281,11 @@ export interface QueryBuilderStart<
      *         'expand.author',             // Expanded relation field
      *         'expand.comments_via_post',  // Back-relation expansion
      *     ])
+     *     .sort(['title', 'author'])
      *     .build(pb.filter);
      *
-     * console.log(query.fields); // Output: 'title,content:excerpt(100,true),author,expand.author,expand.comments_via_post'
      * console.log(query.expand); // Output: 'author,comments_via_post'
+     * console.log(query.sort);   // Output: 'title,author'
      *
      * const records = await pb.collection('posts').getList(1, 20, query);
      *
@@ -328,8 +375,11 @@ export interface QueryBuilderStart<
     ): Omit<QueryBuilderStart<T, MaxDepth, Once | 'expand'>, Once | 'expand'>
 }
 
-export interface QueryBuilder<T, MaxDepth extends number = 6>
-    extends QueryBuilderEnd {
+export interface QueryBuilder<
+    T,
+    MaxDepth extends number = 6,
+    Once extends keyof QueryBuilder<T, MaxDepth> | '' = '',
+> extends QueryBuilderEnd {
     /**
      * Matches records where `key` equals `value`.
      *
@@ -343,7 +393,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     equal<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` is not equal to `value`.
@@ -358,7 +408,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     notEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` is greater than `value`.
@@ -374,7 +424,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     greaterThan<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` is greater than or equal to `value`.
@@ -390,7 +440,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     greaterThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` is less than `value`.
@@ -406,7 +456,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     lessThan<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` is less than or equal to `value`.
@@ -422,7 +472,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     lessThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` contains `value`.
@@ -448,7 +498,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     like<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` doesn't contain `value`.
@@ -474,7 +524,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     notLike<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -492,7 +542,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -510,7 +560,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyNotEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -525,7 +575,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyGreaterThan<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -540,7 +590,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyGreaterThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -555,7 +605,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyLessThan<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -570,7 +620,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyLessThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -598,7 +648,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyLike<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -626,7 +676,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyNotLike<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -660,7 +710,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     search<P extends Path<T, MaxDepth>>(
         keys: P[],
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -675,7 +725,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     in<P extends Path<T, MaxDepth>>(
         key: P,
         values: PathValue<T, P, MaxDepth>[],
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -690,7 +740,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     notIn<P extends Path<T, MaxDepth>>(
         key: P,
         values: PathValue<T, P, MaxDepth>[],
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -709,7 +759,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
         key: P,
         from: PathValue<T, P, MaxDepth>,
         to: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -728,7 +778,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
         key: P,
         from: PathValue<T, P, MaxDepth>,
         to: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -742,7 +792,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
      */
     isNull<P extends Path<T, MaxDepth>>(
         key: P,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -756,7 +806,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
      */
     isNotNull<P extends Path<T, MaxDepth>>(
         key: P,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -775,7 +825,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
      * pbQuery<User>().custom(pb.filter('geoDistance(address.lon, address.lat, {:lon}, {:lat}) < {:distance}', { lon: 23.32, lat: 42.69, distance: 25 })); // geoDistance(address.lon, address.lat, 23.32, 42.69) < 25
      * ```
      */
-    custom(raw: string): RestrictedQueryBuilder<T, MaxDepth>
+    custom(raw: string): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Creates a logical group.
@@ -788,12 +838,42 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     group(
         callback: (
             q: QueryBuilder<T, MaxDepth>,
-        ) => RestrictedQueryBuilder<T, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+        ) => Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>,
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    /**
+     * **_Once_** - This can only be used once.
+     *
+     * Sorts the results by the specified keys.
+     *
+     * Prefixes:
+     * - `-`: Descending order.
+     * - `+`: **DEFAULT**. Ascending order.
+     *
+     * Macros:
+     * - `@random`: Orders by [sqlite's random() function](https://sqlite.org/lang_corefunc.html#random). Useful for shuffling results.
+     * - `@rowid`: **NOT THE SAME AS `id`**. Orders by [sqlite's internal `rowid`](https://www.sqlite.org/lang_createtable.html#rowid). [Can't](https://www.sqlite.org/rowidtable.html) be used with [View Collections](https://pocketbase.io/docs/collections/#view-collection).
+     *
+     * @example
+     * ```ts
+     * const query = pbQuery<Post>()
+     *    .sort(['title', '-created'])
+     *    .build(pb.filter);
+     *
+     * console.log(query.sort) // Output: 'title,-created'
+     * ```
+     *
+     * @since 0.3.0
+     */
+    sort<P extends PathSort<T, MaxDepth>>(
+        keys: P | P[],
+    ): Omit<QueryBuilder<T, MaxDepth, Once | 'sort'>, Once | 'sort'>
 }
 
-export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6>
-    extends QueryBuilderEnd {
+export interface RestrictedQueryBuilder<
+    T,
+    MaxDepth extends number = 6,
+    Once extends keyof QueryBuilder<T, MaxDepth> | '' = '',
+> extends QueryBuilderEnd {
     /**
      * Combines the previous and the next conditions with an `and` logical operator.
      *
@@ -802,7 +882,7 @@ export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6>
      * pbQuery<User>().equal('name', 'Alice').and().equal('role', 'admin'); // name='Alice' && role='admin'
      * ```
      */
-    and(): Omit<QueryBuilder<T, MaxDepth>, 'build'>
+    and(): Omit<QueryBuilder<T, MaxDepth, Once>, Once | 'build'>
     /**
      * Combines the previous and the next conditions with an `or` logical operator.
      *
@@ -811,7 +891,34 @@ export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6>
      * pbQuery<User>().equal('name', 'Alice').or().equal('name', 'Bob'); // name='Alice' || name='Bob'
      * ```
      */
-    or(): Omit<QueryBuilder<T, MaxDepth>, 'build'>
+    or(): Omit<QueryBuilder<T, MaxDepth, Once>, Once | 'build'>
+    /**
+     * **_Once_** - This can only be used once.
+     *
+     * Sorts the results by the specified keys.
+     *
+     * Prefixes:
+     * - `-`: Descending order.
+     * - `+` (default): Ascending order.
+     *
+     * Macros:
+     * - `@random`: Orders by [sqlite's random() function](https://sqlite.org/lang_corefunc.html#random). Useful for shuffling results.
+     * - `@rowid`: **NOT THE SAME AS `id`**. Orders by [sqlite's internal `rowid`](https://www.sqlite.org/lang_createtable.html#rowid). [Can't](https://www.sqlite.org/rowidtable.html) be used with [View Collections](https://pocketbase.io/docs/collections/#view-collection).
+     *
+     * @example
+     * ```ts
+     * const query = pbQuery<Post>()
+     *    .sort(['title', '-created'])
+     *    .build(pb.filter);
+     *
+     * console.log(query.sort) // Output: 'title,-created'
+     * ```
+     *
+     * @since 0.3.0
+     */
+    sort<P extends PathSort<T, MaxDepth>>(
+        keys: P | P[],
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once | 'sort'>, Once | 'sort'>
 }
 
 export interface QueryBuilderEnd {
@@ -841,11 +948,13 @@ export interface QueryBuilderEnd {
      *         'expand.comments_via_post',
      *     ]) // Optional
      *     .search(['title', 'content', 'tags', 'author.name'], 'Football')
+     *     .sort(['title', '-created'])
      *     .build(pb.filter);
      *
      * console.log(query.filter); // Output: "(title~'Football' || content~'Football' || tags~'Football' || author.name~'Football')"
      * console.log(query.fields); // Output: 'title,content:excerpt(100,true),author,expand.author,expand.comments_via_post'
      * console.log(query.expand); // Output: 'author,comments_via_post'
+     * console.log(query.sort);   // Output: 'title,-created'
      *
      * const records = await pb.collection('posts').getList(1, 20, query);
      *

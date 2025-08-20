@@ -171,8 +171,10 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
             if (fields) {
                 console.warn('Overriding previous fields:', fields)
             }
-            fields = generateFields(keys)
-            expand ||= generateExpand(prepareFieldsForExpand(keys))
+
+            const normalizedKeys = Array.isArray(keys) ? keys : [keys]
+            fields = generateFields(normalizedKeys)
+            expand ||= generateExpand(prepareFieldsForExpand(normalizedKeys))
 
             return queryBuilderStart
         },
@@ -180,7 +182,9 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
             if (expand) {
                 console.warn('Overriding previous expand:', expand)
             }
-            expand = generateExpand(keys)
+
+            const normalizedKeys = Array.isArray(keys) ? keys : [keys]
+            expand = generateExpand(normalizedKeys)
 
             return queryBuilderStart
         },

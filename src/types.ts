@@ -260,8 +260,8 @@ export interface QueryBuilderStart<
      *
      * @since 0.3.0
      */
-    fields<P extends PathFields<T, MaxDepth>[]>(
-        keys: P,
+    fields<P extends PathFields<T, MaxDepth>>(
+        keys: P | P[],
     ): Omit<QueryBuilderStart<T, MaxDepth, Once | 'fields'>, Once | 'fields'>
 
     /**
@@ -307,8 +307,8 @@ export interface QueryBuilderStart<
      *
      * @since 0.3.0
      */
-    expand<P extends PathExpand<T, MaxDepth>[]>(
-        keys: P,
+    expand<P extends PathExpand<T, MaxDepth>>(
+        keys: P | P[],
     ): Omit<QueryBuilderStart<T, MaxDepth, Once | 'expand'>, Once | 'expand'>
 }
 

@@ -249,6 +249,10 @@ test('fields', () => {
     const query2 = pbQuery<Post>().build(filter)
     expect(query2.fields).toBe('')
     expect(query2.expand).toBe('')
+
+    const query3 = pbQuery<Post>().fields('*').build(filter)
+    expect(query3.fields).toBe('*')
+    expect(query3.expand).toBe('')
 })
 
 test('expand', () => {
@@ -277,4 +281,7 @@ test('expand', () => {
     expect(query2.expand).toBe(
         ['author.a_via_b.record.b_via_c', 'related'].join(','),
     )
+
+    const query3 = pbQuery<Post>().expand('author').build(filter)
+    expect(query3.expand).toBe(['author'].join(','))
 })

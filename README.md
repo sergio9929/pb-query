@@ -669,6 +669,9 @@ console.log(records);
 >   .fields(['title', 'expand.*'])
 >   .expand(['author', 'comments_via_post'])
 >   .build(pb.filter);
+>
+> console.log(query.fields); // Output: 'title,expand.*'
+> console.log(query.expand); // Output: 'author,comments_via_post'
 > ```
 
 ### Expand Related Records
@@ -679,7 +682,7 @@ _Since v0.3.0_
 
 **_Starter_** - This can only be used once, at the start.
 
-`expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
+`expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations). If used together with `fields()`, it overrides the automatic expansion.
 
 Notes:
 - Supports up to 6-levels depth nested relations expansion.

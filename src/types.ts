@@ -246,13 +246,16 @@ export interface QueryBuilderStart<
      * ```
      *
      * @example
-     * With the key `expand.*` we can't automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations), so you must specify it manually.
+     * With the key `expand.*` we can't automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations), so it must be specified manually.
      *
      * ```ts
      * const query = pbQuery<Post>()
      *   .fields(['title', 'expand.*'])
      *   .expand(['author', 'comments_via_post'])
      *   .build(pb.filter);
+     *
+     * console.log(query.fields); // Output: 'title,expand.*'
+     * console.log(query.expand); // Output: 'author,comments_via_post'
      * ```
      *
      * @since 0.3.0
@@ -264,7 +267,7 @@ export interface QueryBuilderStart<
     /**
      * **_Starter_**, **_Once_** - This can only be used once, at the start.
      *
-     * `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
+     * `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations). If used together with `fields()`, it overrides the automatic expansion.
      *
      * Notes:
      * - Supports up to 6-levels depth nested relations expansion.

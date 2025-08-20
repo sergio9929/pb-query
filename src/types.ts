@@ -201,7 +201,7 @@ export interface QueryBuilderStart<
     Once extends keyof QueryBuilderStart<T, MaxDepth> | '' = '',
 > extends QueryBuilder<T, MaxDepth> {
     /**
-     * **_Starter_** - This can only be used once, at the start.
+     * **_Starter_**, **_Once_** - This can only be used once, at the start.
      *
      * Select which fields to return from PocketBase. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
      *
@@ -262,7 +262,7 @@ export interface QueryBuilderStart<
     ): Omit<QueryBuilderStart<T, MaxDepth, Once | 'fields'>, Once | 'fields'>
 
     /**
-     * **_Starter_** - This can only be used once, at the start.
+     * **_Starter_**, **_Once_** - This can only be used once, at the start.
      *
      * `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
      *

@@ -102,6 +102,15 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
         }
     }
 
+    function applySort(keys: string | string[]) {
+        if (sort) {
+            console.warn('Overriding previous sort:', sort)
+        }
+
+        const normalizedKeys = Array.isArray(keys) ? keys : [keys]
+        sort = generateSort(normalizedKeys)
+    }
+
     const queryBuilder: QueryBuilder<T, MaxDepth> = {
         ...builderFunctions,
         search(keys, value) {
@@ -167,12 +176,7 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
             return restrictedQueryBuilder
         },
         sort(keys) {
-            if (sort) {
-                console.warn('Overriding previous sort:', sort)
-            }
-
-            const normalizedKeys = Array.isArray(keys) ? keys : [keys]
-            sort = generateSort(normalizedKeys)
+            applySort(keys)
 
             return queryBuilder
         },
@@ -214,12 +218,7 @@ export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
             return queryBuilder
         },
         sort(keys) {
-            if (sort) {
-                console.warn('Overriding previous sort:', sort)
-            }
-
-            const normalizedKeys = Array.isArray(keys) ? keys : [keys]
-            sort = generateSort(normalizedKeys)
+            applySort(keys)
 
             return restrictedQueryBuilder
         },

@@ -379,7 +379,13 @@ export interface QueryBuilder<
     T,
     MaxDepth extends number = 6,
     Once extends keyof QueryBuilder<T, MaxDepth> | '' = '',
-> extends QueryBuilderEnd {
+> extends QueryBuilderEnd,
+        SortMethod<
+            T,
+            MaxDepth,
+            QueryBuilder<T, MaxDepth, Once | 'sort'>,
+            Once | 'sort'
+        > {
     /**
      * Matches records where `key` equals `value`.
      *
@@ -840,40 +846,19 @@ export interface QueryBuilder<
             q: QueryBuilder<T, MaxDepth>,
         ) => Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>,
     ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
-    /**
-     * **_Once_** - This can only be used once.
-     *
-     * Sorts the results by the specified keys.
-     *
-     * Prefixes:
-     * - `-`: Descending order.
-     * - `+`: **DEFAULT**. Ascending order.
-     *
-     * Macros:
-     * - `@random`: Orders by [sqlite's random() function](https://sqlite.org/lang_corefunc.html#random). Useful for shuffling results.
-     * - `@rowid`: **NOT THE SAME AS `id`**. Orders by [sqlite's internal `rowid`](https://www.sqlite.org/lang_createtable.html#rowid). [Can't](https://www.sqlite.org/rowidtable.html) be used with [View Collections](https://pocketbase.io/docs/collections/#view-collection).
-     *
-     * @example
-     * ```ts
-     * const query = pbQuery<Post>()
-     *    .sort(['title', '-created'])
-     *    .build(pb.filter);
-     *
-     * console.log(query.sort) // Output: 'title,-created'
-     * ```
-     *
-     * @since 0.3.0
-     */
-    sort<P extends PathSort<T, MaxDepth>>(
-        keys: P | P[],
-    ): Omit<QueryBuilder<T, MaxDepth, Once | 'sort'>, Once | 'sort'>
 }
 
 export interface RestrictedQueryBuilder<
     T,
     MaxDepth extends number = 6,
     Once extends keyof QueryBuilder<T, MaxDepth> | '' = '',
-> extends QueryBuilderEnd {
+> extends QueryBuilderEnd,
+        SortMethod<
+            T,
+            MaxDepth,
+            RestrictedQueryBuilder<T, MaxDepth, Once | 'sort'>,
+            Once | 'sort'
+        > {
     /**
      * Combines the previous and the next conditions with an `and` logical operator.
      *
@@ -892,33 +877,6 @@ export interface RestrictedQueryBuilder<
      * ```
      */
     or(): Omit<QueryBuilder<T, MaxDepth, Once>, Once | 'build'>
-    /**
-     * **_Once_** - This can only be used once.
-     *
-     * Sorts the results by the specified keys.
-     *
-     * Prefixes:
-     * - `-`: Descending order.
-     * - `+` (default): Ascending order.
-     *
-     * Macros:
-     * - `@random`: Orders by [sqlite's random() function](https://sqlite.org/lang_corefunc.html#random). Useful for shuffling results.
-     * - `@rowid`: **NOT THE SAME AS `id`**. Orders by [sqlite's internal `rowid`](https://www.sqlite.org/lang_createtable.html#rowid). [Can't](https://www.sqlite.org/rowidtable.html) be used with [View Collections](https://pocketbase.io/docs/collections/#view-collection).
-     *
-     * @example
-     * ```ts
-     * const query = pbQuery<Post>()
-     *    .sort(['title', '-created'])
-     *    .build(pb.filter);
-     *
-     * console.log(query.sort) // Output: 'title,-created'
-     * ```
-     *
-     * @since 0.3.0
-     */
-    sort<P extends PathSort<T, MaxDepth>>(
-        keys: P | P[],
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once | 'sort'>, Once | 'sort'>
 }
 
 export interface QueryBuilderEnd {
@@ -982,4 +940,37 @@ export interface QueryBuilderEnd {
     build(): QueryResult<RawQueryObject>
     build(filter: FilterFunction): QueryResult<string>
     build(filter?: FilterFunction): QueryResult<RawQueryObject | string>
+}
+
+interface SortMethod<
+    T,
+    MaxDepth extends number,
+    Builder,
+    Once extends PropertyKey,
+> {
+    /**
+     * **_Once_** - This can only be used once.
+     *
+     * Sorts the results by the specified keys.
+     *
+     * Prefixes:
+     * - `-`: Descending order.
+     * - `+` (default): Ascending order.
+     *
+     * Macros:
+     * - `@random`: Orders by [sqlite's random() function](https://sqlite.org/lang_corefunc.html#random). Useful for shuffling results.
+     * - `@rowid`: **NOT THE SAME AS `id`**. Orders by [sqlite's internal `rowid`](https://www.sqlite.org/lang_createtable.html#rowid). [Can't](https://www.sqlite.org/rowidtable.html) be used with [View Collections](https://pocketbase.io/docs/collections/#view-collection).
+     *
+     * @example
+     * ```ts
+     * const query = pbQuery<Post>()
+     *    .sort(['title', '-created'])
+     *    .build(pb.filter);
+     *
+     * console.log(query.sort) // Output: 'title,-created'
+     * ```
+     *
+     * @since 0.3.0
+     */
+    sort<P extends PathSort<T, MaxDepth>>(keys: P | P[]): Omit<Builder, Once>
 }

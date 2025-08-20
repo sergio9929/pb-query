@@ -85,4 +85,8 @@ test('all possible keys', () => {
 
     expectTypeOf<'anything_via_user'>().not.toMatchTypeOf<Path<Post, 6>>()
     equal('anything_via_user.anything', new Date()).build()
+
+    expectTypeOf<'user'>().toMatchTypeOf<Path<Post, 1>>()
+    expectTypeOf<'user.name'>().not.toMatchTypeOf<Path<Post, 1>>()
+    expectTypeOf<'user.name'>().toMatchTypeOf<Path<Post, 2>>()
 })

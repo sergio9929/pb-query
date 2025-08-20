@@ -33,34 +33,58 @@ export type Path<
     D extends number = 0,
 > = D extends MaxDepth
     ? never
-    : K extends string // This filters out symbol keys
-      ? KeyPaths<T, K, MaxDepth, D> // Now K is guaranteed to be string key
-      : never
-
-type KeyPaths<
-    T,
-    K extends string & keyof T,
-    MaxDepth extends number,
-    D extends number,
-> = T[K] extends string
-    ? `${K}` | `${K}:lower`
-    : T[K] extends readonly object[]
-      ?
+    : K extends string // This filters out symbol keys, now K is guaranteed to be string key
+      ? PathHelper<
+            T,
+            K,
+            // Text
+            `${K}` | `${K}:lower`,
+            // Date
+            `${K}`,
+            // GeoPoint
+            `${K}.${Path<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`,
+            // Multiple
+            `${K}` | `${K}:each` | `${K}:length`,
+            // Relation
+            | `${K}`
+            | `${K}.${Path<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+            | `${string}_via_${string}.${string}`,
+            // Multiple Relation
             | `${K}`
             | `${K}:each`
             | `${K}:length`
-            | `${K}.${Path<T[K][number], MaxDepth, keyof T[K][number], DepthCounter[D]>}`
-            | `${string}_via_${string}.${string}`
+            | `${K}.${Path<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
+            | `${string}_via_${string}.${string}`,
+            // Other
+            `${K}`
+        >
+      : never
+
+type Elem<T> = T extends readonly (infer U)[] ? U : never
+
+type PathHelper<
+    T,
+    K extends keyof T & string,
+    TextField,
+    DateField,
+    GeoPointField,
+    MultipleField,
+    RelationField,
+    MultipleRelationField,
+    Other,
+> = T[K] extends string
+    ? TextField
+    : T[K] extends readonly object[]
+      ? MultipleRelationField
       : T[K] extends readonly unknown[]
-        ? `${K}` | `${K}:each` | `${K}:length`
+        ? MultipleField
         : T[K] extends Date
-          ? `${K}`
-          : T[K] extends object
-            ?
-                  | `${K}`
-                  | `${K}.${Path<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
-                  | `${string}_via_${string}.${string}`
-            : `${K}`
+          ? DateField
+          : Exact<T[K], GeoPoint, 1, 2> extends 1
+            ? GeoPointField
+            : T[K] extends object
+              ? RelationField
+              : Other
 
 export type PathExpand<
     T,
@@ -69,36 +93,32 @@ export type PathExpand<
     D extends number = 0,
 > = D extends MaxDepth
     ? never
-    : K extends string // This filters out symbol keys
-      ? KeyPathsExpand<T, K, MaxDepth, D> // Now K is guaranteed to be string key
-      : never
-
-type KeyPathsExpand<
-    T,
-    K extends string & keyof T,
-    MaxDepth extends number,
-    D extends number,
-> = T[K] extends string
-    ? never
-    : T[K] extends readonly object[]
-      ?
+    : K extends string // This filters out symbol keys, now K is guaranteed to be string key
+      ? PathHelper<
+            T,
+            K,
+            // Text
+            never,
+            // Date
+            never,
+            // GeoPoint
+            never,
+            // Multiple
+            never,
+            // Relation
             | `${K}`
-            | `${K}.${PathExpand<T[K][number], MaxDepth, keyof T[K][number], DepthCounter[D]>}`
+            | `${K}.${PathExpand<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
             | `${string}_via_${string}`
-            | `${string}_via_${string}.${string}`
-      : T[K] extends readonly unknown[]
-        ? never
-        : T[K] extends Date
-          ? never
-          : Exact<T[K], GeoPoint, 1, 2> extends 1
-            ? never
-            : T[K] extends object
-              ?
-                    | `${K}`
-                    | `${K}.${PathExpand<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
-                    | `${string}_via_${string}`
-                    | `${string}_via_${string}.${string}`
-              : never
+            | `${string}_via_${string}.${string}`,
+            // Multiple Relation
+            | `${K}`
+            | `${K}.${PathExpand<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
+            | `${string}_via_${string}`
+            | `${string}_via_${string}.${string}`,
+            // Other
+            never
+        >
+      : never
 
 export type PathFields<
     T,
@@ -107,47 +127,43 @@ export type PathFields<
     D extends number = 0,
 > = D extends MaxDepth
     ? never
-    : K extends string // This filters out symbol keys
-      ? KeyPathsFields<T, K, MaxDepth, D> | '*' // Now K is guaranteed to be string key
-      : never
-
-type KeyPathsFields<
-    T,
-    K extends string & keyof T,
-    MaxDepth extends number,
-    D extends number,
-> = T[K] extends string
-    ?
-          | `${K}`
-          | `${K}:excerpt(${number},${boolean})`
-          | `${K}:excerpt(${number}, ${boolean})`
-    : T[K] extends readonly object[]
+    : K extends string // This filters out symbol keys, now K is guaranteed to be string key
       ?
-            | `${K}`
-            | `expand.${K}`
-            | `expand.${K}.*`
-            | `expand.${K}.${PathFields<T[K][number], MaxDepth, keyof T[K][number], DepthCounter[D]>}`
-            | `${string}_via_${string}`
-            | `expand.${string}_via_${string}`
-            | `expand.${string}_via_${string}.${string}`
-      : T[K] extends readonly unknown[]
-        ? `${K}`
-        : T[K] extends Date
-          ? `${K}`
-          : Exact<T[K], GeoPoint, 1, 2> extends 1
-            ?
+            | PathHelper<
+                  T,
+                  K,
+                  // Text
                   | `${K}`
-                  | `${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
-            : T[K] extends object
-              ?
-                    | `${K}`
-                    | `expand.${K}`
-                    | `expand.${K}.*`
-                    | `expand.${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
-                    | `${string}_via_${string}`
-                    | `expand.${string}_via_${string}`
-                    | `expand.${string}_via_${string}.${string}`
-              : `${K}`
+                  | `${K}:excerpt(${number},${boolean})`
+                  | `${K}:excerpt(${number}, ${boolean})`,
+                  // Date
+                  `${K}`,
+                  // GeoPoint
+                  | `${K}`
+                  | `${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`,
+                  // Multiple
+                  `${K}`,
+                  // Relation
+                  | `${K}`
+                  | `expand.${K}`
+                  | `expand.${K}.*`
+                  | `expand.${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+                  | `${string}_via_${string}`
+                  | `expand.${string}_via_${string}`
+                  | `expand.${string}_via_${string}.${string}`,
+                  // Multiple Relation
+                  | `${K}`
+                  | `expand.${K}`
+                  | `expand.${K}.*`
+                  | `expand.${K}.${PathFields<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
+                  | `${string}_via_${string}`
+                  | `expand.${string}_via_${string}`
+                  | `expand.${string}_via_${string}.${string}`,
+                  // Other
+                  `${K}`
+              >
+            | '*'
+      : never
 
 type PathValueHelper<
     T,

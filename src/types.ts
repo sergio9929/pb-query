@@ -283,7 +283,9 @@ export interface QueryBuilderStart<
     /**
      * **_Starter_**, **_Once_** - This can only be used once, at the start.
      *
-     * Select which fields to return from PocketBase. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
+     * Accepts a single key or an array of keys.
+     *
+     * Selects which fields to return from PocketBase. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
      *
      * Modifiers:
      * - `*` targets all keys from the specific depth level.
@@ -348,7 +350,9 @@ export interface QueryBuilderStart<
     /**
      * **_Starter_**, **_Once_** - This can only be used once, at the start.
      *
-     * `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations). If used together with `fields()`, it overrides the automatic expansion.
+     * Accepts a single key or an array of keys.
+     *
+     * Expands information from related collections. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations). If used together with `fields()`, it overrides the automatic expansion.
      *
      * Notes:
      * - Supports up to 6-levels depth nested relations expansion.
@@ -968,6 +972,8 @@ interface SortMethod<
 > {
     /**
      * **_Once_** - This can only be used once.
+     *
+     * Accepts a single key or an array of keys.
      *
      * Sorts the results by the specified keys.
      *

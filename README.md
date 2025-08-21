@@ -622,13 +622,15 @@ pbQuery<User>().isNotNull('name'); // name!=''
 
 ### Field Selection
 
-#### `.fields(fields)`
+#### `.fields(keys)`
 
 _Since v0.3.0_
 
 **_Starter_**, **_Once_** - This can only be used once, at the start.
 
-Select which fields to return from PocketBase. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
+Accepts a single key or an array of keys.
+
+Selects which fields to return from PocketBase. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
 
 Modifiers:
 - `*` – Targets all keys from the specific depth level.
@@ -683,13 +685,15 @@ console.log(records);
 
 ### Expand Related Records
 
-#### `.expand(fields)`
+#### `.expand(keys)`
 
 _Since v0.3.0_
 
 **_Starter_**, **_Once_** - This can only be used once, at the start.
 
-`expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations). If used together with `fields()`, it overrides the automatic expansion.
+Accepts a single key or an array of keys.
+
+Expands information from related collections. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations). If used together with `fields()`, it overrides the automatic expansion.
 
 Notes:
 - Supports up to 6-levels depth nested relations expansion.
@@ -728,11 +732,13 @@ console.log(records);
 
 ## Sorting
 
-#### `.sort(fields)`
+#### `.sort(keys)`
 
 _Since v0.3.0_
 
 **_Once_** - This can only be used once.
+
+Accepts a single key or an array of keys.
 
 Sorts the results by the specified keys.
 

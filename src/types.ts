@@ -1,4 +1,4 @@
-import type { DATETIME_MACROS } from './constants'
+import type { DATETIME_MACROS, OPERATORS } from './constants'
 
 export type FilterFunction = (
     raw: string,
@@ -8,6 +8,8 @@ export type FilterFunction = (
 ) => string
 
 export type DatetimeMacro = (typeof DATETIME_MACROS)[number]
+export type OperatorMethod = keyof typeof OPERATORS
+export type Operator = (typeof OPERATORS)[OperatorMethod]
 
 export type RawQueryObject = { raw: string; values: Record<string, unknown> }
 export type QueryResult<T = string> = {

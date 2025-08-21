@@ -258,7 +258,7 @@ pbQuery<Post>()
 
 ### Macros
 
-Native [PocketBase datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) are supported: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`
+Native [PocketBase datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) are supported:
 - `@now` – Current datetime.
 - `@yesterday` – 24 hours before `@now`.
 - `@tomorrow` – 24 hours after`@now`.

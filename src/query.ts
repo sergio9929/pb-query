@@ -1,6 +1,7 @@
 import { OPERATORS } from './constants'
 import type {
     FilterFunction,
+    OperatorMethod,
     Path,
     PathValue,
     QueryBuilder,
@@ -66,12 +67,9 @@ export function pbQuery<
         values: PathValue<T, P, MaxDepth>,
     ) => RestrictedQueryBuilder<T, MaxDepth>
 
-    const builderFunctions = {} as Record<
-        keyof typeof OPERATORS,
-        BuilderFunction
-    >
+    const builderFunctions = {} as Record<OperatorMethod, BuilderFunction>
     for (const [name, operator] of Object.entries(OPERATORS)) {
-        const key = name as keyof typeof OPERATORS
+        const key = name as OperatorMethod
         builderFunctions[key] = <P extends Path<T, MaxDepth>>(
             key: P,
             value: PathValue<T, P, MaxDepth>,

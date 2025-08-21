@@ -36,7 +36,7 @@ yarn add @sergio9929/pb-query
 
 ## Version Compatibility
 
-You are reading the documentation for versions equal or higher to `pb-query@0.3.0`.
+You are reading the documentation for versions equal or higher to `0.3.0`.
 
 | PocketBase | pb-query | documentation |
 | - | - | - |

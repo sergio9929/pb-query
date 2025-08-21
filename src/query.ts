@@ -17,10 +17,10 @@ import {
     prepareFieldsForExpand,
 } from './utils'
 
-export function pbQuery<T, MaxDepth extends number = 6>(): QueryBuilderStart<
-    T,
-    MaxDepth
-> {
+export function pbQuery<
+    T = Record<string, unknown>,
+    MaxDepth extends number = 6,
+>(): QueryBuilderStart<T, MaxDepth> {
     let query = ''
     let fields = ''
     let expand = ''

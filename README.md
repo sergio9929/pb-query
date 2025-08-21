@@ -12,6 +12,7 @@
 ## Features
 
 - **💬 Full TypeScript Integration** – Get autocompletion for fields and type safety based on your schema.
+- **📖 Built-in Documentation** – Get examples and explanations directly in your IDE with JSDoc.
 - **🔗 Chainable API** – Easily build complex queries using a functional, intuitive syntax.
 - **🛡️ Injection Protection** – Automatically sanitize queries with `pb.filter()`.
 - **🧩 Nested Grouping** – Create advanced logic with `.group()`.
@@ -19,7 +20,6 @@
 - **🔍 Advanced Search** – Perform multi-field searches with a single method call.
 - **⚡ Helper Operators** – Use built-in helpers like `.search()`, `.between()`, `.in()`, `.isNull()`, and more.
 - **🪝 Works Everywhere** – Use queries both in your app and inside `pb_hooks`.
-- **📖 Built-in Documentation** – Get examples and explanations directly in your IDE with JSDoc.
 
 ## Installation
 

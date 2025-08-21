@@ -27,7 +27,8 @@ type Exact<T, U, Y = unknown, N = never> = (<G>() => G extends T
 
 type DepthCounter = [1, 2, 3, 4, 5, 6, never]
 
-export type Path<
+export type Path<T, MaxDepth extends number> = ForceAlias<FullPath<T, MaxDepth>>
+type FullPath<
     T,
     MaxDepth extends number,
     K extends keyof T = keyof T,
@@ -43,24 +44,32 @@ export type Path<
             // Date
             `${K}`,
             // GeoPoint
-            `${K}.${Path<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`,
+            `${K}.${FullPath<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`,
             // Multiple
             `${K}` | `${K}:each` | `${K}:length`,
             // Relation
             | `${K}`
-            | `${K}.${Path<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+            | `${K}.${FullPath<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
             | `${string}_via_${string}.${string}`,
             // Multiple Relation
             | `${K}`
             | `${K}:each`
             | `${K}:length`
-            | `${K}.${Path<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
+            | `${K}.${FullPath<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
             | `${string}_via_${string}.${string}`,
             // Other
             `${K}`
         >
       : never
 
+/**
+ * Forces the IDE to display the type alias instead of the full type union.
+ */
+type ForceAlias<T> = T & {}
+
+/**
+ * A lazy way of doing `T[keyof T][number]`.
+ */
 type Elem<T> = T extends readonly (infer U)[] ? U : never
 
 type PathHelper<
@@ -87,7 +96,10 @@ type PathHelper<
               ? RelationField
               : Other
 
-export type PathExpand<
+export type PathExpand<T, MaxDepth extends number> = ForceAlias<
+    FullPathExpand<T, MaxDepth>
+>
+type FullPathExpand<
     T,
     MaxDepth extends number,
     K extends keyof T = keyof T,
@@ -108,12 +120,12 @@ export type PathExpand<
             never,
             // Relation
             | `${K}`
-            | `${K}.${PathExpand<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+            | `${K}.${FullPathExpand<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
             | `${string}_via_${string}`
             | `${string}_via_${string}.${string}`,
             // Multiple Relation
             | `${K}`
-            | `${K}.${PathExpand<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
+            | `${K}.${FullPathExpand<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
             | `${string}_via_${string}`
             | `${string}_via_${string}.${string}`,
             // Other
@@ -121,7 +133,10 @@ export type PathExpand<
         >
       : never
 
-export type PathFields<
+export type PathFields<T, MaxDepth extends number> = ForceAlias<
+    FullPathFields<T, MaxDepth>
+>
+type FullPathFields<
     T,
     MaxDepth extends number,
     K extends keyof T = keyof T,
@@ -141,14 +156,14 @@ export type PathFields<
                   `${K}`,
                   // GeoPoint
                   | `${K}`
-                  | `${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`,
+                  | `${K}.${FullPathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`,
                   // Multiple
                   `${K}`,
                   // Relation
                   | `${K}`
                   | `expand.${K}`
                   | `expand.${K}.*`
-                  | `expand.${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+                  | `expand.${K}.${FullPathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
                   | `${string}_via_${string}`
                   | `expand.${string}_via_${string}`
                   | `expand.${string}_via_${string}.${string}`,
@@ -156,7 +171,7 @@ export type PathFields<
                   | `${K}`
                   | `expand.${K}`
                   | `expand.${K}.*`
-                  | `expand.${K}.${PathFields<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
+                  | `expand.${K}.${FullPathFields<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
                   | `${string}_via_${string}`
                   | `expand.${string}_via_${string}`
                   | `expand.${string}_via_${string}.${string}`,
@@ -166,7 +181,10 @@ export type PathFields<
             | '*'
       : never
 
-export type PathSort<
+export type PathSort<T, MaxDepth extends number> = ForceAlias<
+    FullPathSort<T, MaxDepth>
+>
+export type FullPathSort<
     T,
     MaxDepth extends number,
     K extends keyof T = keyof T,
@@ -193,7 +211,7 @@ export type PathSortLoop<
             // Date
             `${K}`,
             // GeoPoint
-            `${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`,
+            `${K}.${PathSortLoop<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`,
             // Multiple
             `${K}`,
             // Relation

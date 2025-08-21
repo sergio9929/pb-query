@@ -285,3 +285,49 @@ test('expand', () => {
     const query3 = pbQuery<Post>().expand('author').build(filter)
     expect(query3.expand).toBe(['author'].join(','))
 })
+
+test('sort', () => {
+    const query1 = pbQuery<Post>()
+        .sort([
+            '@random',
+            '@rowid',
+            'related.updated',
+            'related.updated',
+            'author',
+            '+author',
+            '-created',
+        ])
+        .equal('author', 'a')
+        .or()
+        .equal('author', 'a')
+        .build(filter)
+    expect(query1.sort).toBe(
+        [
+            '@random',
+            '@rowid',
+            'related.updated',
+            'author',
+            '+author',
+            '-created',
+        ].join(','),
+    )
+
+    const query2 = pbQuery<Post>()
+        .equal('author', 'a')
+        .sort(['-created'])
+        .or()
+        .equal('author', 'a')
+        .build(filter)
+    expect(query2.sort).toBe(['-created'].join(','))
+
+    const query3 = pbQuery<Post>()
+        .equal('author', 'a')
+        .or()
+        .sort(['-created'])
+        .equal('author', 'a')
+        .build(filter)
+    expect(query3.sort).toBe(['-created'].join(','))
+
+    const query4 = pbQuery<Post>().sort('-created').build(filter)
+    expect(query4.sort).toBe(['-created'].join(','))
+})

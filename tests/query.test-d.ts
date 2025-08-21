@@ -85,4 +85,19 @@ test('all possible keys', () => {
 
     expectTypeOf<'anything_via_user'>().not.toMatchTypeOf<Path<Post, 6>>()
     equal('anything_via_user.anything', new Date()).build()
+
+    expectTypeOf<'user'>().toMatchTypeOf<Path<Post, 1>>()
+    expectTypeOf<'user.name'>().not.toMatchTypeOf<Path<Post, 1>>()
+    expectTypeOf<'user.name'>().toMatchTypeOf<Path<Post, 2>>()
+
+    const test1 = pbQuery<Post>().equal('id', 'test')
+    expectTypeOf<'sort'>().toMatchTypeOf<keyof typeof test1>()
+
+    const test2 = pbQuery<Post>().sort(['-created']).equal('id', 'test')
+    expectTypeOf<'and'>().toMatchTypeOf<keyof typeof test2>()
+    expectTypeOf<'sort'>().not.toMatchTypeOf<keyof typeof test2>()
+
+    const test3 = pbQuery<Post>().sort(['-created']).equal('id', 'test').and()
+    expectTypeOf<'equal'>().toMatchTypeOf<keyof typeof test3>()
+    expectTypeOf<'sort'>().not.toMatchTypeOf<keyof typeof test3>()
 })

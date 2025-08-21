@@ -1,4 +1,4 @@
-import type { DATETIME_MACROS } from './constants'
+import type { DATETIME_MACROS, OPERATORS } from './constants'
 
 export type FilterFunction = (
     raw: string,
@@ -8,15 +8,20 @@ export type FilterFunction = (
 ) => string
 
 export type DatetimeMacro = (typeof DATETIME_MACROS)[number]
+export type OperatorMethod = keyof typeof OPERATORS
+export type Operator = (typeof OPERATORS)[OperatorMethod]
 
 export type RawQueryObject = { raw: string; values: Record<string, unknown> }
 export type QueryResult<T = string> = {
     filter: T
     fields: string
     expand: string
+    sort: string
 }
 
 export type GeoPoint = { lon: string; lat: string }
+
+type SortKey<K extends string> = `${K}` | `-${K}` | `+${K}`
 
 type Exact<T, U, Y = unknown, N = never> = (<G>() => G extends T
     ? 1
@@ -26,128 +31,205 @@ type Exact<T, U, Y = unknown, N = never> = (<G>() => G extends T
 
 type DepthCounter = [1, 2, 3, 4, 5, 6, never]
 
-export type Path<
+/**
+ * Forces the IDE to display the type alias instead of the full type union.
+ */
+type ForceAlias<T> = T & {}
+
+/**
+ * A lazy way of doing `T[keyof T][number]`.
+ */
+type Elem<T> = T extends readonly (infer U)[] ? U : never
+
+type PathHelper<
+    T,
+    K extends keyof T & string,
+    TextField,
+    DateField,
+    GeoPointField,
+    MultipleField,
+    RelationField,
+    MultipleRelationField,
+    Other,
+> = T[K] extends string
+    ? TextField
+    : T[K] extends readonly object[]
+      ? MultipleRelationField
+      : T[K] extends readonly unknown[]
+        ? MultipleField
+        : T[K] extends Date
+          ? DateField
+          : Exact<T[K], GeoPoint, 1, 2> extends 1
+            ? GeoPointField
+            : T[K] extends object
+              ? RelationField
+              : Other
+
+export type Path<T, MaxDepth extends number> = ForceAlias<FullPath<T, MaxDepth>>
+type FullPath<
     T,
     MaxDepth extends number,
     K extends keyof T = keyof T,
     D extends number = 0,
 > = D extends MaxDepth
     ? never
-    : K extends string // This filters out symbol keys
-      ? KeyPaths<T, K, MaxDepth, D> // Now K is guaranteed to be string key
-      : never
-
-type KeyPaths<
-    T,
-    K extends string & keyof T,
-    MaxDepth extends number,
-    D extends number,
-> = T[K] extends string
-    ? `${K}` | `${K}:lower`
-    : T[K] extends readonly object[]
-      ?
+    : K extends string // This filters out symbol keys, now K is guaranteed to be string key
+      ? PathHelper<
+            T,
+            K,
+            // Text
+            `${K}` | `${K}:lower`,
+            // Date
+            `${K}`,
+            // GeoPoint
+            `${K}.${FullPath<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`,
+            // Multiple
+            `${K}` | `${K}:each` | `${K}:length`,
+            // Relation
+            | `${K}`
+            | `${K}.${FullPath<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+            | `${string}_via_${string}.${string}`,
+            // Multiple Relation
             | `${K}`
             | `${K}:each`
             | `${K}:length`
-            | `${K}.${Path<T[K][number], MaxDepth, keyof T[K][number], DepthCounter[D]>}`
-            | `${string}_via_${string}.${string}`
-      : T[K] extends readonly unknown[]
-        ? `${K}` | `${K}:each` | `${K}:length`
-        : T[K] extends Date
-          ? `${K}`
-          : T[K] extends object
-            ?
-                  | `${K}`
-                  | `${K}.${Path<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
-                  | `${string}_via_${string}.${string}`
-            : `${K}`
+            | `${K}.${FullPath<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
+            | `${string}_via_${string}.${string}`,
+            // Other
+            `${K}`
+        >
+      : never
 
-export type PathExpand<
+export type PathExpand<T, MaxDepth extends number> = ForceAlias<
+    FullPathExpand<T, MaxDepth>
+>
+type FullPathExpand<
     T,
     MaxDepth extends number,
     K extends keyof T = keyof T,
     D extends number = 0,
 > = D extends MaxDepth
     ? never
-    : K extends string // This filters out symbol keys
-      ? KeyPathsExpand<T, K, MaxDepth, D> // Now K is guaranteed to be string key
+    : K extends string // This filters out symbol keys, now K is guaranteed to be string key
+      ? PathHelper<
+            T,
+            K,
+            // Text
+            never,
+            // Date
+            never,
+            // GeoPoint
+            never,
+            // Multiple
+            never,
+            // Relation
+            | `${K}`
+            | `${K}.${FullPathExpand<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+            | `${string}_via_${string}`
+            | `${string}_via_${string}.${string}`,
+            // Multiple Relation
+            | `${K}`
+            | `${K}.${FullPathExpand<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
+            | `${string}_via_${string}`
+            | `${string}_via_${string}.${string}`,
+            // Other
+            never
+        >
       : never
 
-type KeyPathsExpand<
-    T,
-    K extends string & keyof T,
-    MaxDepth extends number,
-    D extends number,
-> = T[K] extends string
-    ? never
-    : T[K] extends readonly object[]
-      ?
-            | `${K}`
-            | `${K}.${PathExpand<T[K][number], MaxDepth, keyof T[K][number], DepthCounter[D]>}`
-            | `${string}_via_${string}`
-            | `${string}_via_${string}.${string}`
-      : T[K] extends readonly unknown[]
-        ? never
-        : T[K] extends Date
-          ? never
-          : Exact<T[K], GeoPoint, 1, 2> extends 1
-            ? never
-            : T[K] extends object
-              ?
-                    | `${K}`
-                    | `${K}.${PathExpand<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
-                    | `${string}_via_${string}`
-                    | `${string}_via_${string}.${string}`
-              : never
-
-export type PathFields<
+export type PathFields<T, MaxDepth extends number> = ForceAlias<
+    FullPathFields<T, MaxDepth>
+>
+type FullPathFields<
     T,
     MaxDepth extends number,
     K extends keyof T = keyof T,
     D extends number = 0,
 > = D extends MaxDepth
     ? never
-    : K extends string // This filters out symbol keys
-      ? KeyPathsFields<T, K, MaxDepth, D> | '*' // Now K is guaranteed to be string key
+    : K extends string // This filters out symbol keys, now K is guaranteed to be string key
+      ?
+            | PathHelper<
+                  T,
+                  K,
+                  // Text
+                  | `${K}`
+                  | `${K}:excerpt(${number},${boolean})`
+                  | `${K}:excerpt(${number}, ${boolean})`,
+                  // Date
+                  `${K}`,
+                  // GeoPoint
+                  | `${K}`
+                  | `${K}.${FullPathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`,
+                  // Multiple
+                  `${K}`,
+                  // Relation
+                  | `${K}`
+                  | `expand.${K}`
+                  | `expand.${K}.*`
+                  | `expand.${K}.${FullPathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+                  | `${string}_via_${string}`
+                  | `expand.${string}_via_${string}`
+                  | `expand.${string}_via_${string}.${string}`,
+                  // Multiple Relation
+                  | `${K}`
+                  | `expand.${K}`
+                  | `expand.${K}.*`
+                  | `expand.${K}.${FullPathFields<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
+                  | `${string}_via_${string}`
+                  | `expand.${string}_via_${string}`
+                  | `expand.${string}_via_${string}.${string}`,
+                  // Other
+                  `${K}`
+              >
+            | '*'
       : never
 
-type KeyPathsFields<
+export type PathSort<T, MaxDepth extends number> = ForceAlias<
+    FullPathSort<T, MaxDepth>
+>
+type FullPathSort<
     T,
-    K extends string & keyof T,
     MaxDepth extends number,
-    D extends number,
-> = T[K] extends string
-    ?
-          | `${K}`
-          | `${K}:excerpt(${number},${boolean})`
-          | `${K}:excerpt(${number}, ${boolean})`
-    : T[K] extends readonly object[]
-      ?
+    K extends keyof T = keyof T,
+    D extends number = 0,
+> = D extends MaxDepth
+    ? never
+    : K extends string // This filters out symbol keys, now K is guaranteed to be string key
+      ? '@random' | '@rowid' | SortKey<PathSortLoop<T, MaxDepth, K, D>>
+      : never
+
+type PathSortLoop<
+    T,
+    MaxDepth extends number,
+    K extends keyof T = keyof T,
+    D extends number = 0,
+> = D extends MaxDepth
+    ? never
+    : K extends string // This filters out symbol keys, now K is guaranteed to be string key
+      ? PathHelper<
+            T,
+            K,
+            // Text
+            `${K}`,
+            // Date
+            `${K}`,
+            // GeoPoint
+            `${K}.${PathSortLoop<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`,
+            // Multiple
+            `${K}`,
+            // Relation
             | `${K}`
-            | `expand.${K}`
-            | `expand.${K}.*`
-            | `expand.${K}.${PathFields<T[K][number], MaxDepth, keyof T[K][number], DepthCounter[D]>}`
-            | `${string}_via_${string}`
-            | `expand.${string}_via_${string}`
-            | `expand.${string}_via_${string}.${string}`
-      : T[K] extends readonly unknown[]
-        ? `${K}`
-        : T[K] extends Date
-          ? `${K}`
-          : Exact<T[K], GeoPoint, 1, 2> extends 1
-            ?
-                  | `${K}`
-                  | `${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
-            : T[K] extends object
-              ?
-                    | `${K}`
-                    | `expand.${K}`
-                    | `expand.${K}.*`
-                    | `expand.${K}.${PathFields<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
-                    | `${string}_via_${string}`
-                    | `expand.${string}_via_${string}`
-                    | `expand.${string}_via_${string}.${string}`
-              : `${K}`
+            | `${K}.${PathSortLoop<T[K], MaxDepth, keyof T[K], DepthCounter[D]>}`
+            | `${string}_via_${string}.${string}`,
+            // Multiple Relation
+            | `${K}`
+            | `${K}.${PathSortLoop<Elem<T[K]>, MaxDepth, keyof Elem<T[K]>, DepthCounter[D]>}`
+            | `${string}_via_${string}.${string}`,
+            // Other
+            `${K}`
+        >
+      : never
 
 type PathValueHelper<
     T,
@@ -203,7 +285,9 @@ export interface QueryBuilderStart<
     /**
      * **_Starter_**, **_Once_** - This can only be used once, at the start.
      *
-     * Select which fields to return from PocketBase. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
+     * Accepts a single key or an array of keys.
+     *
+     * Selects which fields to return from PocketBase. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
      *
      * Modifiers:
      * - `*` targets all keys from the specific depth level.
@@ -219,10 +303,11 @@ export interface QueryBuilderStart<
      *         'expand.author',             // Expanded relation field
      *         'expand.comments_via_post',  // Back-relation expansion
      *     ])
+     *     .sort(['title', 'author'])
      *     .build(pb.filter);
      *
-     * console.log(query.fields); // Output: 'title,content:excerpt(100,true),author,expand.author,expand.comments_via_post'
      * console.log(query.expand); // Output: 'author,comments_via_post'
+     * console.log(query.sort);   // Output: 'title,author'
      *
      * const records = await pb.collection('posts').getList(1, 20, query);
      *
@@ -267,7 +352,9 @@ export interface QueryBuilderStart<
     /**
      * **_Starter_**, **_Once_** - This can only be used once, at the start.
      *
-     * `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations). If used together with `fields()`, it overrides the automatic expansion.
+     * Accepts a single key or an array of keys.
+     *
+     * Expands information from related collections. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations). If used together with `fields()`, it overrides the automatic expansion.
      *
      * Notes:
      * - Supports up to 6-levels depth nested relations expansion.
@@ -312,8 +399,17 @@ export interface QueryBuilderStart<
     ): Omit<QueryBuilderStart<T, MaxDepth, Once | 'expand'>, Once | 'expand'>
 }
 
-export interface QueryBuilder<T, MaxDepth extends number = 6>
-    extends QueryBuilderEnd {
+export interface QueryBuilder<
+    T,
+    MaxDepth extends number = 6,
+    Once extends keyof QueryBuilder<T, MaxDepth> | '' = '',
+> extends QueryBuilderEnd,
+        SortMethod<
+            T,
+            MaxDepth,
+            QueryBuilder<T, MaxDepth, Once | 'sort'>,
+            Once | 'sort'
+        > {
     /**
      * Matches records where `key` equals `value`.
      *
@@ -327,7 +423,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     equal<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` is not equal to `value`.
@@ -342,7 +438,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     notEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` is greater than `value`.
@@ -358,7 +454,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     greaterThan<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` is greater than or equal to `value`.
@@ -374,7 +470,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     greaterThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` is less than `value`.
@@ -390,7 +486,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     lessThan<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` is less than or equal to `value`.
@@ -406,7 +502,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     lessThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` contains `value`.
@@ -432,7 +528,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     like<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Matches records where `key` doesn't contain `value`.
@@ -458,7 +554,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     notLike<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -476,7 +572,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -494,7 +590,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyNotEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -509,7 +605,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyGreaterThan<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -524,7 +620,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyGreaterThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -539,7 +635,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyLessThan<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -554,7 +650,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyLessThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -582,7 +678,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyLike<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -610,7 +706,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     anyNotLike<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -644,7 +740,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     search<P extends Path<T, MaxDepth>>(
         keys: P[],
         value: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -659,7 +755,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     in<P extends Path<T, MaxDepth>>(
         key: P,
         values: PathValue<T, P, MaxDepth>[],
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -674,7 +770,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     notIn<P extends Path<T, MaxDepth>>(
         key: P,
         values: PathValue<T, P, MaxDepth>[],
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -693,7 +789,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
         key: P,
         from: PathValue<T, P, MaxDepth>,
         to: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -712,7 +808,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
         key: P,
         from: PathValue<T, P, MaxDepth>,
         to: PathValue<T, P, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -726,7 +822,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
      */
     isNull<P extends Path<T, MaxDepth>>(
         key: P,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -740,7 +836,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
      */
     isNotNull<P extends Path<T, MaxDepth>>(
         key: P,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * **_Helper_**
@@ -759,7 +855,7 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
      * pbQuery<User>().custom(pb.filter('geoDistance(address.lon, address.lat, {:lon}, {:lat}) < {:distance}', { lon: 23.32, lat: 42.69, distance: 25 })); // geoDistance(address.lon, address.lat, 23.32, 42.69) < 25
      * ```
      */
-    custom(raw: string): RestrictedQueryBuilder<T, MaxDepth>
+    custom(raw: string): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
      * Creates a logical group.
@@ -772,12 +868,21 @@ export interface QueryBuilder<T, MaxDepth extends number = 6>
     group(
         callback: (
             q: QueryBuilder<T, MaxDepth>,
-        ) => RestrictedQueryBuilder<T, MaxDepth>,
-    ): RestrictedQueryBuilder<T, MaxDepth>
+        ) => Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>,
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 }
 
-export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6>
-    extends QueryBuilderEnd {
+export interface RestrictedQueryBuilder<
+    T,
+    MaxDepth extends number = 6,
+    Once extends keyof QueryBuilder<T, MaxDepth> | '' = '',
+> extends QueryBuilderEnd,
+        SortMethod<
+            T,
+            MaxDepth,
+            RestrictedQueryBuilder<T, MaxDepth, Once | 'sort'>,
+            Once | 'sort'
+        > {
     /**
      * Combines the previous and the next conditions with an `and` logical operator.
      *
@@ -786,7 +891,7 @@ export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6>
      * pbQuery<User>().equal('name', 'Alice').and().equal('role', 'admin'); // name='Alice' && role='admin'
      * ```
      */
-    and(): Omit<QueryBuilder<T, MaxDepth>, 'build'>
+    and(): Omit<QueryBuilder<T, MaxDepth, Once>, Once | 'build'>
     /**
      * Combines the previous and the next conditions with an `or` logical operator.
      *
@@ -795,7 +900,7 @@ export interface RestrictedQueryBuilder<T, MaxDepth extends number = 6>
      * pbQuery<User>().equal('name', 'Alice').or().equal('name', 'Bob'); // name='Alice' || name='Bob'
      * ```
      */
-    or(): Omit<QueryBuilder<T, MaxDepth>, 'build'>
+    or(): Omit<QueryBuilder<T, MaxDepth, Once>, Once | 'build'>
 }
 
 export interface QueryBuilderEnd {
@@ -825,11 +930,13 @@ export interface QueryBuilderEnd {
      *         'expand.comments_via_post',
      *     ]) // Optional
      *     .search(['title', 'content', 'tags', 'author.name'], 'Football')
+     *     .sort(['title', '-created'])
      *     .build(pb.filter);
      *
      * console.log(query.filter); // Output: "(title~'Football' || content~'Football' || tags~'Football' || author.name~'Football')"
      * console.log(query.fields); // Output: 'title,content:excerpt(100,true),author,expand.author,expand.comments_via_post'
      * console.log(query.expand); // Output: 'author,comments_via_post'
+     * console.log(query.sort);   // Output: 'title,-created'
      *
      * const records = await pb.collection('posts').getList(1, 20, query);
      *
@@ -857,4 +964,39 @@ export interface QueryBuilderEnd {
     build(): QueryResult<RawQueryObject>
     build(filter: FilterFunction): QueryResult<string>
     build(filter?: FilterFunction): QueryResult<RawQueryObject | string>
+}
+
+interface SortMethod<
+    T,
+    MaxDepth extends number,
+    Builder,
+    Once extends PropertyKey,
+> {
+    /**
+     * **_Once_** - This can only be used once.
+     *
+     * Accepts a single key or an array of keys.
+     *
+     * Sorts the results by the specified keys.
+     *
+     * Prefixes:
+     * - `-`: Descending order.
+     * - `+` (default): Ascending order.
+     *
+     * Macros:
+     * - `@random`: Orders by [sqlite's random() function](https://sqlite.org/lang_corefunc.html#random). Useful for shuffling results.
+     * - `@rowid`: **NOT THE SAME AS `id`**. Orders by [sqlite's internal `rowid`](https://www.sqlite.org/lang_createtable.html#rowid). [Can't](https://www.sqlite.org/rowidtable.html) be used with [View Collections](https://pocketbase.io/docs/collections/#view-collection).
+     *
+     * @example
+     * ```ts
+     * const query = pbQuery<Post>()
+     *    .sort(['title', '-created'])
+     *    .build(pb.filter);
+     *
+     * console.log(query.sort) // Output: 'title,-created'
+     * ```
+     *
+     * @since 0.3.0
+     */
+    sort<P extends PathSort<T, MaxDepth>>(keys: P | P[]): Omit<Builder, Once>
 }

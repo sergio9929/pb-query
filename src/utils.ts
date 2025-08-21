@@ -106,3 +106,9 @@ export function generateExpand(keys: string[]) {
         }, [] as string[])
         .join(',')
 }
+
+export function generateSort(keys: string[]) {
+    const uniqueKeys = [...new Set(keys)]
+
+    return uniqueKeys.join(',')
+}

@@ -36,7 +36,7 @@ yarn add @sergio9929/pb-query
 
 ## Version Compatibility
 
-You are reading the documentation for versions equal or higher to `pb-query@0.3.0`.
+You are reading the documentation for versions equal or higher to `0.3.0`.
 
 | PocketBase | pb-query | documentation |
 | - | - | - |
@@ -75,6 +75,7 @@ const query = pbQuery<Post>()
       .and()
       .greaterThan('priority', 5)
   )
+  .sort(['title', '-created'])
   .build(pb.filter);
 
 console.log(query.expand);
@@ -87,6 +88,9 @@ console.log(query.filter);
 // Output: "(title~'footba' || content~'footba' || tags~'footba' || author~'footba')
 // && (created>='2023-01-01 00:00:00.000Z' && created<='2023-12-31 00:00:00.000Z')
 // || (tags?~'sports' && priority>5)"
+
+console.log(query.sort);
+// Output: 'title,-created'
 
 // Use your query
 const records = await pb.collection("posts").getList(1, 20, query);
@@ -107,7 +111,7 @@ const records = await pb.collection("posts").getList(1, 20, query);
 routerAdd("GET", "/example", (e) => {
   const { pbQuery } = require('@sergio9929/pb-query');
 
-  const { filter } = pbQuery()
+  const { filter, sort } = pbQuery()
     .search(['title', 'content', 'tags.title', 'author'], 'footba')
     .and()
     .between('created', new Date('2023-01-01'), new Date('2024-12-31'))
@@ -117,12 +121,13 @@ routerAdd("GET", "/example", (e) => {
         .and()
         .greaterThan('priority', 5)
     )
+    .sort(['title', '-created'])
     .build();
 
   const records = $app.findRecordsByFilter(
     'posts',
     filter.raw,
-    '',
+    sort,
     20,
     0,
     filter.values,
@@ -141,6 +146,7 @@ routerAdd("GET", "/example", (e) => {
 - 🛠️ [Multiple Operators](#multiple-operators)
 - ⚡ [Helper Operators](#helper-operators)
 - 🔍 [Fields and Expand](#fields-and-expand)
+- ⬇️ [Sorting](#sorting)
 - 💡 [Tips and Tricks](#tips-and-tricks)
 - 🚨 [Troubleshooting](#troubleshooting)
 - 🙏 [Credits](#credits)
@@ -183,6 +189,7 @@ console.log(query);
 // {
 //   fields: '',
 //   expand: '',
+//   sort: '',
 //   filter: {
 //     raw: 'content~{:content1}',
 //     values: { content1: 'Top Secret%' }
@@ -251,7 +258,7 @@ pbQuery<Post>()
 
 ### Macros
 
-Native [PocketBase datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) are supported: `@now`, `@yesterday`, `@tomorrow`, `@todayStart`, `@todayEnd`, `@monthStart`, `@monthEnd`, `@yearStart`, `@yearEnd`
+Native [PocketBase datetime macros](https://pocketbase.io/docs/api-rules-and-filters/#-macros) are supported:
 - `@now` – Current datetime.
 - `@yesterday` – 24 hours before `@now`.
 - `@tomorrow` – 24 hours after`@now`.
@@ -615,13 +622,15 @@ pbQuery<User>().isNotNull('name'); // name!=''
 
 ### Field Selection
 
-#### `.fields(fields)`
+#### `.fields(keys)`
 
 _Since v0.3.0_
 
 **_Starter_**, **_Once_** - This can only be used once, at the start.
 
-Select which fields to return from PocketBase. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
+Accepts a single key or an array of keys.
+
+Selects which fields to return from PocketBase. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations).
 
 Modifiers:
 - `*` – Targets all keys from the specific depth level.
@@ -676,13 +685,15 @@ console.log(records);
 
 ### Expand Related Records
 
-#### `.expand(fields)`
+#### `.expand(keys)`
 
 _Since v0.3.0_
 
 **_Starter_**, **_Once_** - This can only be used once, at the start.
 
-`expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations). If used together with `fields()`, it overrides the automatic expansion.
+Accepts a single key or an array of keys.
+
+Expands information from related collections. `expand()` is not needed if `fields()` is used, we automatically include what to [expand](https://pocketbase.io/docs/working-with-relations/#expanding-relations). If used together with `fields()`, it overrides the automatic expansion.
 
 Notes:
 - Supports up to 6-levels depth nested relations expansion.
@@ -717,6 +728,34 @@ console.log(records);
 //     ...,
 //   },
 // ]
+```
+
+## Sorting
+
+#### `.sort(keys)`
+
+_Since v0.3.0_
+
+**_Once_** - This can only be used once.
+
+Accepts a single key or an array of keys.
+
+Sorts the results by the specified keys.
+
+Prefixes:
+- `-` – Descending order.
+- `+` – **DEFAULT**. Ascending order.
+
+Macros:
+- `@random` – Orders by [sqlite's random() function](https://sqlite.org/lang_corefunc.html#random). Useful for shuffling results.
+- `@rowid` – **NOT THE SAME AS `id`**. Orders by [sqlite's internal `rowid`](https://www.sqlite.org/lang_createtable.html#rowid). [Can't](https://www.sqlite.org/rowidtable.html) be used with [View Collections](https://pocketbase.io/docs/collections/#view-collection).
+
+```ts
+const query = pbQuery<Post>()
+   .sort(['title', '-created'])
+   .build(pb.filter);
+
+console.log(query.sort) // Output: 'title,-created'
 ```
 
 ## Tips and tricks

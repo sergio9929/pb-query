@@ -19,6 +19,8 @@ export type QueryResult<T = string> = {
 
 export type GeoPoint = { lon: string; lat: string }
 
+type SortKey<K extends string> = `${K}` | `-${K}` | `+${K}`
+
 type Exact<T, U, Y = unknown, N = never> = (<G>() => G extends T
     ? 1
     : 2) extends <G>() => G extends U ? 1 : 2
@@ -26,6 +28,40 @@ type Exact<T, U, Y = unknown, N = never> = (<G>() => G extends T
     : N
 
 type DepthCounter = [1, 2, 3, 4, 5, 6, never]
+
+/**
+ * Forces the IDE to display the type alias instead of the full type union.
+ */
+type ForceAlias<T> = T & {}
+
+/**
+ * A lazy way of doing `T[keyof T][number]`.
+ */
+type Elem<T> = T extends readonly (infer U)[] ? U : never
+
+type PathHelper<
+    T,
+    K extends keyof T & string,
+    TextField,
+    DateField,
+    GeoPointField,
+    MultipleField,
+    RelationField,
+    MultipleRelationField,
+    Other,
+> = T[K] extends string
+    ? TextField
+    : T[K] extends readonly object[]
+      ? MultipleRelationField
+      : T[K] extends readonly unknown[]
+        ? MultipleField
+        : T[K] extends Date
+          ? DateField
+          : Exact<T[K], GeoPoint, 1, 2> extends 1
+            ? GeoPointField
+            : T[K] extends object
+              ? RelationField
+              : Other
 
 export type Path<T, MaxDepth extends number> = ForceAlias<FullPath<T, MaxDepth>>
 type FullPath<
@@ -61,40 +97,6 @@ type FullPath<
             `${K}`
         >
       : never
-
-/**
- * Forces the IDE to display the type alias instead of the full type union.
- */
-type ForceAlias<T> = T & {}
-
-/**
- * A lazy way of doing `T[keyof T][number]`.
- */
-type Elem<T> = T extends readonly (infer U)[] ? U : never
-
-type PathHelper<
-    T,
-    K extends keyof T & string,
-    TextField,
-    DateField,
-    GeoPointField,
-    MultipleField,
-    RelationField,
-    MultipleRelationField,
-    Other,
-> = T[K] extends string
-    ? TextField
-    : T[K] extends readonly object[]
-      ? MultipleRelationField
-      : T[K] extends readonly unknown[]
-        ? MultipleField
-        : T[K] extends Date
-          ? DateField
-          : Exact<T[K], GeoPoint, 1, 2> extends 1
-            ? GeoPointField
-            : T[K] extends object
-              ? RelationField
-              : Other
 
 export type PathExpand<T, MaxDepth extends number> = ForceAlias<
     FullPathExpand<T, MaxDepth>
@@ -184,7 +186,7 @@ type FullPathFields<
 export type PathSort<T, MaxDepth extends number> = ForceAlias<
     FullPathSort<T, MaxDepth>
 >
-export type FullPathSort<
+type FullPathSort<
     T,
     MaxDepth extends number,
     K extends keyof T = keyof T,
@@ -195,7 +197,7 @@ export type FullPathSort<
       ? '@random' | '@rowid' | SortKey<PathSortLoop<T, MaxDepth, K, D>>
       : never
 
-export type PathSortLoop<
+type PathSortLoop<
     T,
     MaxDepth extends number,
     K extends keyof T = keyof T,
@@ -226,8 +228,6 @@ export type PathSortLoop<
             `${K}`
         >
       : never
-
-type SortKey<K extends string> = `${K}` | `-${K}` | `+${K}`
 
 type PathValueHelper<
     T,

@@ -1,5 +1,33 @@
 # @sergio9929/pb-query
 
+## 0.3.1
+
+### Patch Changes
+
+- Fix unexpected type errors with back-relations
+
+  Back-relations caused type errors when the provided type had no relation fields.
+
+  Example of the error before the fix:
+
+  ```ts
+  interface SpecialPost {
+    id: string;
+    title: string;
+    content: string;
+    created: Date;
+    updated: Date;
+    // Note that this has no relation fields
+  }
+
+  const queryTTT = pbQuery<SpecialPost>()
+    .expand(["author.a_via_b.record.b_via_c"])
+    .build(filter);
+  // TS Error: Argument of type '"anything_via_author.anything"' is not assignable to parameter of type 'Path<SpecialPost, 6>'.
+  ```
+
+  This works perfectly fine now.
+
 ## 0.3.0
 
 ### Minor Changes

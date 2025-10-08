@@ -164,11 +164,19 @@ test('nested groups', () => {
 })
 
 test('back-relations', () => {
-    const groupTest = pbQuery<Post>()
+    const query1 = pbQuery<Post>()
         .equal('anything_via_author.anything', new Date('2021-12-31'))
         .build(filter)
 
-    expect(groupTest.filter).toBe(
+    expect(query1.filter).toBe(
+        "anything_via_author.anything='2021-12-31 00:00:00.000Z'",
+    )
+
+    const query2 = pbQuery<SpecialPost>()
+        .equal('anything_via_author.anything', new Date('2021-12-31'))
+        .build(filter)
+
+    expect(query2.filter).toBe(
         "anything_via_author.anything='2021-12-31 00:00:00.000Z'",
     )
 })

@@ -887,7 +887,7 @@ export interface RestrictedQueryBuilder<
      * pbQuery<User>().equal('name', 'Alice').and().equal('role', 'admin'); // name='Alice' && role='admin'
      * ```
      */
-    and(): Omit<QueryBuilder<T, MaxDepth, Once>, Once | 'build'>
+    and(): Omit<QueryBuilder<T, MaxDepth, Once>, Once>
     /**
      * Combines the previous and the next conditions with an `or` logical operator.
      *
@@ -896,7 +896,7 @@ export interface RestrictedQueryBuilder<
      * pbQuery<User>().equal('name', 'Alice').or().equal('name', 'Bob'); // name='Alice' || name='Bob'
      * ```
      */
-    or(): Omit<QueryBuilder<T, MaxDepth, Once>, Once | 'build'>
+    or(): Omit<QueryBuilder<T, MaxDepth, Once>, Once>
 }
 
 export interface QueryBuilderEnd {

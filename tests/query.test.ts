@@ -2,7 +2,7 @@ import PocketBase from 'pocketbase'
 import { expect, test } from 'vitest'
 import { pbQuery } from '../src/query'
 import type { GeoPoint } from '../src/types'
-import { filter } from '../src/utils'
+import { cleanQuery, filter } from '../src/utils'
 
 interface User {
     id: string
@@ -338,4 +338,36 @@ test('sort', () => {
 
     const query4 = pbQuery<Post>().sort('-created').build(filter)
     expect(query4.sort).toBe(['-created'].join(','))
+})
+
+test('query cleanup', () => {
+    const rawQuery =
+        "&& || name='test1' && (|| &&name='test2'    ||   && ) && id='test3' && || "
+
+    const cleanedQuery = cleanQuery(rawQuery)
+    expect(cleanedQuery).toBe("name='test1' && (name='test2') && id='test3'")
+
+    const condition1 = true
+    const candition2 = false
+
+    const query = pbQuery<User>()
+        .custom(rawQuery)
+        .and()
+        .group((q) => {
+            if (condition1) {
+                q.equal('city', 'New York').or()
+            }
+
+            if (candition2) {
+                q.equal('age', 30).or()
+            }
+
+            return q
+        })
+
+    query.and()
+
+    expect(query.build(filter).filter).toBe(
+        "name='test1' && (name='test2') && id='test3' && (city='New York')",
+    )
 })

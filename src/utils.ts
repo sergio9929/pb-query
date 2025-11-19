@@ -112,3 +112,45 @@ export function generateSort(keys: string[]) {
 
     return uniqueKeys.join(',')
 }
+
+export function cleanQuery(query: string): string {
+    if (!query?.trim()) return query || ''
+
+    const steps = [
+        removeOperatorsAfterOpeningParenthesis,
+        removeOperatorsBeforeClosingParenthesis,
+        removeStackedOperators,
+        removeTrailingOperators,
+        normalize,
+    ]
+
+    return steps.reduce((result, step) => step(result), query)
+}
+
+const AND = '&&'
+const OR = '\\|\\|' // escaped because of regex
+const OP = `(?:${AND}|${OR})` // matches && or ||
+const OP_SEQ = `${OP}(?:\\s*${OP})*` // matches sequences like "|| && && ||"
+
+function normalize(str: string): string {
+    return str.replace(/\s+/g, ' ').trim()
+}
+
+function removeOperatorsAfterOpeningParenthesis(str: string): string {
+    // Remove ANY sequence of operators right after "("
+    return str.replace(new RegExp(`\\(\\s*${OP_SEQ}\\s*`, 'g'), '(')
+}
+
+function removeOperatorsBeforeClosingParenthesis(str: string): string {
+    // Remove ANY sequence of operators right before ")"
+    return str.replace(new RegExp(`\\s*${OP_SEQ}\\s*\\)`, 'g'), ')')
+}
+
+function removeStackedOperators(str: string): string {
+    // "&& &&", "|| ||", "&& ||", etc.
+    return str.replace(new RegExp(`${OP}\\s+${OP}`, 'g'), '')
+}
+
+function removeTrailingOperators(str: string): string {
+    return str.replace(new RegExp(`${OP}\\s*$`, 'g'), '')
+}

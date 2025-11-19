@@ -11,6 +11,7 @@ import type {
     RestrictedQueryBuilder,
 } from './types'
 import {
+    cleanQuery,
     generateExpand,
     generateFields,
     generateSort,
@@ -84,18 +85,20 @@ export function pbQuery<
     function build(
         filter?: FilterFunction,
     ): QueryResult<RawQueryObject | string> {
+        const cleanedQuery = cleanQuery(query)
+
         if (typeof filter === 'function') {
             return {
                 expand,
                 fields,
-                filter: filter(query, Object.fromEntries(valueMap)),
+                filter: filter(cleanedQuery, Object.fromEntries(valueMap)),
                 sort,
             }
         }
         return {
             expand,
             fields,
-            filter: { raw: query, values: Object.fromEntries(valueMap) },
+            filter: { raw: cleanedQuery, values: Object.fromEntries(valueMap) },
             sort,
         }
     }

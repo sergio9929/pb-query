@@ -862,7 +862,9 @@ export interface QueryBuilder<
     group(
         callback: (
             q: QueryBuilder<T, MaxDepth>,
-        ) => Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>,
+        ) =>
+            | Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+            | Omit<QueryBuilder<T, MaxDepth, Once>, Once>,
     ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 }
 

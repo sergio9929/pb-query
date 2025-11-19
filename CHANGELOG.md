@@ -1,5 +1,52 @@
 # @sergio9929/pb-query
 
+## 0.3.2
+
+### Patch Changes
+
+- Allow the use of trailing logical operators
+
+  Example 1:
+
+  ```ts
+  const query = pbQuery<User>()
+    .group((q) => {
+      if (condition1) {
+        // true
+        q.equal("name", "Sergio").or();
+      }
+
+      if (condition2) {
+        // true
+        q.equal("city", "New York").or();
+      }
+
+      if (candition3) {
+        // false
+        q.equal("age", 30).or();
+      }
+
+      return q;
+    })
+    .build(pb.filter);
+
+  console.log(query.filter);
+  // Output: "(name='Sergio' || city='New York')"
+  ```
+
+  Example 2:
+
+  ```ts
+  const query = pbQuery<User>().equal("name", "Sergio").and();
+
+  query.equal("city", "New York").and(); // trailing logical operator
+
+  console.log(query.build(pb.filter).filter);
+  // Output: "name='Sergio' && city='New York'"
+  ```
+
+  > [!NOTE] > `pb-query` now cleans the final query by removing unnecessary spaces and any leading or trailing logical operators, even inside the custom() function.
+
 ## 0.3.1
 
 ### Patch Changes

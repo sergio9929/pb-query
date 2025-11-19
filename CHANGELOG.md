@@ -45,7 +45,8 @@
   // Output: "name='Sergio' && city='New York'"
   ```
 
-  > [!NOTE] > `pb-query` now cleans the final query by removing unnecessary spaces and any leading or trailing logical operators, even inside the custom() function.
+  > [!NOTE]
+  > `pb-query` now cleans the final query by removing unnecessary spaces and any leading or trailing logical operators, even inside the custom() function.
 
 ## 0.3.1
 

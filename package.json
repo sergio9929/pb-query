@@ -5,7 +5,9 @@
     "main": "dist/index.js",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
-    "files": ["dist"],
+    "files": [
+        "dist"
+    ],
     "scripts": {
         "prepare": "husky",
         "build": "tsdown index.ts --format cjs,esm --dts",
@@ -31,7 +33,7 @@
     "author": "sergio9929",
     "license": "UNLICENSED",
     "devDependencies": {
-        "@biomejs/biome": "^1.9.4",
+        "@biomejs/biome": "^2.3.7",
         "@changesets/cli": "^2.28.1",
         "husky": "^9.1.7",
         "lint-staged": "^16.1.0",
@@ -39,7 +41,7 @@
         "pocketbase": "^0.26.0",
         "tsdown": "^0.12.6",
         "typescript": "^5.8.3",
-        "vitest": "^3.2.0"
+        "vitest": "^4.0.14"
     },
     "lint-staged": {
         "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": "pnpm lint"
@@ -51,5 +53,6 @@
     "bugs": {
         "url": "https://github.com/sergio9929/pb-query/issues"
     },
-    "homepage": "https://github.com/sergio9929/pb-query#readme"
+    "homepage": "https://sergio9929.github.io/pb-query/",
+    "packageManager": "pnpm@10.23.0"
 }

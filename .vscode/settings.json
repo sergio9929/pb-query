@@ -6,10 +6,16 @@
 
     // Auto fix
     "editor.codeActionsOnSave": {
-        "quickfix.biome": "explicit",
-        "source.organizeImports.biome": "explicit"
+        "source.fixAll.biome": "explicit"
     },
     "[typescript]": {
         "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[mdc]": {
+        "editor.defaultFormatter": "Nuxt.mdc",
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": false,
+        "editor.formatOnPaste": true
     }
 }

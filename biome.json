@@ -1,5 +1,5 @@
 {
-    "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+    "$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
     "vcs": {
         "enabled": true,
         "clientKind": "git",
@@ -7,38 +7,48 @@
     },
     "files": {
         "ignoreUnknown": false,
-        "ignore": []
+        "includes": ["**"]
     },
     "formatter": {
         "enabled": true,
         "indentStyle": "space",
         "indentWidth": 4
     },
-    "organizeImports": {
-        "enabled": true
-    },
+    "assist": { "actions": { "source": { "organizeImports": "on" } } },
     "linter": {
         "enabled": true,
         "rules": {
             "recommended": true,
             "correctness": {
-                "noUnusedImports": "error",
-                "noUnusedVariables": "error",
-                "noUnusedFunctionParameters": "error"
+                "noUnusedImports": "warn",
+                "noUnusedVariables": "warn",
+                "noUnusedFunctionParameters": "warn"
             },
             "style": {
-                "useShorthandArrayType": "error",
-                "useThrowNewError": "error",
-                "useThrowOnlyError": "error",
+                "useThrowNewError": "warn",
+                "useThrowOnlyError": "warn",
                 "useNamingConvention": {
                     "level": "error",
                     "options": {
                         "requireAscii": true,
-                        "strictCase": false
+                        "strictCase": false,
+                        "conventions": [
+                            {
+                                "match": ".*_via_.*|(.*)"
+                            }
+                        ]
                     }
+                },
+                "useConsistentArrayType": {
+                    "level": "error",
+                    "options": { "syntax": "shorthand" }
                 }
+            },
+            "suspicious": {
+                "noExplicitAny": "off"
             }
-        }
+        },
+        "includes": ["**", "!**/*.vue", "!**/pocketbase-types.ts"]
     },
     "javascript": {
         "formatter": {

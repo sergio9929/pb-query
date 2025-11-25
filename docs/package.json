@@ -1,0 +1,15 @@
+{
+    "name": "pb-query-docs",
+    "description": "A type-safe PocketBase query builder",
+    "scripts": {
+        "dev": "nuxt dev --extends docus",
+        "build": "nuxt build --extends docus",
+        "generate": "nuxt generate --extends docus"
+    },
+    "dependencies": {
+        "better-sqlite3": "^12.2.0",
+        "docus": "latest",
+        "nuxt": "^4.1.2",
+        "vue": "^3.5.25"
+    }
+}

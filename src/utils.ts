@@ -96,6 +96,8 @@ export function generateExpand(keys: string[]) {
                 if (x?.startsWith(word)) {
                     return true
                 }
+
+                return false
             })
 
             if (!canBeIgnored) {

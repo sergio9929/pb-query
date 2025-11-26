@@ -33,6 +33,7 @@ jobs:
         run: pnpm generate --preset github_pages
         env:
           NUXT_APP_BASE_URL: /${{ github.event.repository.name }}/
+          NUXT_IMAGE_PROVIDER: none
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

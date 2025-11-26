@@ -2,6 +2,9 @@ export default defineNuxtConfig({
     site: {
         name: 'pb-query',
     },
+    image: {
+        format: ['webp'],
+    },
     app: {
         head: {
             link: [

@@ -12,6 +12,9 @@ jobs:
       run:
         working-directory: ./docs
     steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
       - name: Use pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -22,9 +25,12 @@ jobs:
         with:
           node-version: 22
           cache: "pnpm"
-      # Pick your own package manager and build script
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build -- --preset github_pages
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build -- --preset github_pages
         env:
           NUXT_APP_BASE_URL: /${{ github.event.repository.name }}/
 

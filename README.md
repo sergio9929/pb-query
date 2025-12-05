@@ -133,20 +133,6 @@ routerAdd("GET", "/example", (e) => {
 });
 ```
 
-## Table of Contents
-
-- ✨ [Why pb-query?](#why-pb-query)
-- 🧠 [Core Concepts](#core-concepts)
-- 🔧 [Basic Operators](#basic-operators)
-- 🧩 [Combination Operators](#combination-operators)
-- 🛠️ [Multiple Operators](#multiple-operators)
-- ⚡ [Helper Operators](#helper-operators)
-- 🔍 [Fields and Expand](#fields-and-expand)
-- ⬇️ [Sorting](#sorting)
-- 💡 [Tips and Tricks](#tips-and-tricks)
-- 🚨 [Troubleshooting](#troubleshooting)
-- 🙏 [Credits](#credits)
-
 ## Why pb-query?
 
 Our goal was to build a flexible, strongly-typed query builder with useful helpers to simplify the querying process. But more importantly, we wanted to create a tool that helps prevent errors and provides examples and solid autocompletion in the IDE. This way, when we come back to the project after a long time, we won't need to relearn the intricacies of PocketBase's querying syntax.

@@ -274,8 +274,9 @@ export type HandleModifier<V, Modifier extends string> = Modifier extends 'each'
 export interface QueryBuilderStart<
     T,
     MaxDepth extends number = 6,
+    HasGlobalFilter extends boolean = false,
     Once extends keyof QueryBuilderStart<T, MaxDepth> | '' = '',
-> extends QueryBuilder<T, MaxDepth> {
+> extends QueryBuilder<T, MaxDepth, HasGlobalFilter> {
     /**
      * **_Starter_**, **_Once_** - This can only be used once, at the start.
      *
@@ -341,7 +342,10 @@ export interface QueryBuilderStart<
      */
     fields<P extends PathFields<T, MaxDepth>>(
         keys: P | P[],
-    ): Omit<QueryBuilderStart<T, MaxDepth, Once | 'fields'>, Once | 'fields'>
+    ): Omit<
+        QueryBuilderStart<T, MaxDepth, HasGlobalFilter, Once | 'fields'>,
+        Once | 'fields'
+    >
 
     /**
      * **_Starter_**, **_Once_** - This can only be used once, at the start.
@@ -390,18 +394,22 @@ export interface QueryBuilderStart<
      */
     expand<P extends PathExpand<T, MaxDepth>>(
         keys: P | P[],
-    ): Omit<QueryBuilderStart<T, MaxDepth, Once | 'expand'>, Once | 'expand'>
+    ): Omit<
+        QueryBuilderStart<T, MaxDepth, HasGlobalFilter, Once | 'expand'>,
+        Once | 'expand'
+    >
 }
 
 export interface QueryBuilder<
     T,
     MaxDepth extends number = 6,
+    HasGlobalFilter extends boolean = false,
     Once extends keyof QueryBuilder<T, MaxDepth> | '' = '',
-> extends QueryBuilderEnd,
+> extends QueryBuilderEnd<HasGlobalFilter>,
         SortMethod<
             T,
             MaxDepth,
-            QueryBuilder<T, MaxDepth, Once | 'sort'>,
+            QueryBuilder<T, MaxDepth, HasGlobalFilter, Once | 'sort'>,
             Once | 'sort'
         > {
     /**
@@ -417,7 +425,7 @@ export interface QueryBuilder<
     equal<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Matches records where `key` is not equal to `value`.
@@ -432,7 +440,7 @@ export interface QueryBuilder<
     notEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Matches records where `key` is greater than `value`.
@@ -448,7 +456,7 @@ export interface QueryBuilder<
     greaterThan<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Matches records where `key` is greater than or equal to `value`.
@@ -464,7 +472,7 @@ export interface QueryBuilder<
     greaterThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Matches records where `key` is less than `value`.
@@ -480,7 +488,7 @@ export interface QueryBuilder<
     lessThan<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Matches records where `key` is less than or equal to `value`.
@@ -496,7 +504,7 @@ export interface QueryBuilder<
     lessThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Matches records where `key` contains `value`.
@@ -522,7 +530,7 @@ export interface QueryBuilder<
     like<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Matches records where `key` doesn't contain `value`.
@@ -548,7 +556,7 @@ export interface QueryBuilder<
     notLike<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -566,7 +574,7 @@ export interface QueryBuilder<
     anyEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -584,7 +592,7 @@ export interface QueryBuilder<
     anyNotEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -599,7 +607,7 @@ export interface QueryBuilder<
     anyGreaterThan<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -614,7 +622,7 @@ export interface QueryBuilder<
     anyGreaterThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -629,7 +637,7 @@ export interface QueryBuilder<
     anyLessThan<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -644,7 +652,7 @@ export interface QueryBuilder<
     anyLessThanOrEqual<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -672,7 +680,7 @@ export interface QueryBuilder<
     anyLike<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
@@ -700,7 +708,7 @@ export interface QueryBuilder<
     anyNotLike<P extends Path<T, MaxDepth>>(
         key: P,
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * **_Helper_**
@@ -734,7 +742,7 @@ export interface QueryBuilder<
     search<P extends Path<T, MaxDepth>>(
         keys: P[],
         value: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * **_Helper_**
@@ -749,7 +757,7 @@ export interface QueryBuilder<
     in<P extends Path<T, MaxDepth>>(
         key: P,
         values: PathValue<T, P, MaxDepth>[],
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * **_Helper_**
@@ -764,7 +772,7 @@ export interface QueryBuilder<
     notIn<P extends Path<T, MaxDepth>>(
         key: P,
         values: PathValue<T, P, MaxDepth>[],
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * **_Helper_**
@@ -783,7 +791,7 @@ export interface QueryBuilder<
         key: P,
         from: PathValue<T, P, MaxDepth>,
         to: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * **_Helper_**
@@ -802,7 +810,7 @@ export interface QueryBuilder<
         key: P,
         from: PathValue<T, P, MaxDepth>,
         to: PathValue<T, P, MaxDepth>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * **_Helper_**
@@ -816,7 +824,7 @@ export interface QueryBuilder<
      */
     isNull<P extends Path<T, MaxDepth>>(
         key: P,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * **_Helper_**
@@ -830,7 +838,7 @@ export interface QueryBuilder<
      */
     isNotNull<P extends Path<T, MaxDepth>>(
         key: P,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * **_Helper_**
@@ -849,7 +857,9 @@ export interface QueryBuilder<
      * pbQuery<User>().custom(pb.filter('geoDistance(address.lon, address.lat, {:lon}, {:lat}) < {:distance}', { lon: 23.32, lat: 42.69, distance: 25 })); // geoDistance(address.lon, address.lat, 23.32, 42.69) < 25
      * ```
      */
-    custom(raw: string): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+    custom(
+        raw: string,
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 
     /**
      * Creates a logical group.
@@ -863,20 +873,24 @@ export interface QueryBuilder<
         callback: (
             q: QueryBuilder<T, MaxDepth>,
         ) =>
-            | Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
-            | Omit<QueryBuilder<T, MaxDepth, Once>, Once>,
-    ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
+            | Omit<
+                  RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>,
+                  Once
+              >
+            | Omit<QueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>,
+    ): Omit<RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 }
 
 export interface RestrictedQueryBuilder<
     T,
     MaxDepth extends number = 6,
+    HasGlobalFilter extends boolean = false,
     Once extends keyof QueryBuilder<T, MaxDepth> | '' = '',
-> extends QueryBuilderEnd,
+> extends QueryBuilderEnd<HasGlobalFilter>,
         SortMethod<
             T,
             MaxDepth,
-            RestrictedQueryBuilder<T, MaxDepth, Once | 'sort'>,
+            RestrictedQueryBuilder<T, MaxDepth, HasGlobalFilter, Once | 'sort'>,
             Once | 'sort'
         > {
     /**
@@ -887,7 +901,7 @@ export interface RestrictedQueryBuilder<
      * pbQuery<User>().equal('name', 'Alice').and().equal('role', 'admin'); // name='Alice' && role='admin'
      * ```
      */
-    and(): Omit<QueryBuilder<T, MaxDepth, Once>, Once>
+    and(): Omit<QueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
     /**
      * Combines the previous and the next conditions with an `or` logical operator.
      *
@@ -896,12 +910,12 @@ export interface RestrictedQueryBuilder<
      * pbQuery<User>().equal('name', 'Alice').or().equal('name', 'Bob'); // name='Alice' || name='Bob'
      * ```
      */
-    or(): Omit<QueryBuilder<T, MaxDepth, Once>, Once>
+    or(): Omit<QueryBuilder<T, MaxDepth, HasGlobalFilter, Once>, Once>
 }
 
-export interface QueryBuilderEnd {
+export interface QueryBuilderEnd<HasGlobalFilter = false> {
     /**
-     * Returns an object with `filter`, `fields` and `expand`. Read more in the [official documentation](https://pocketbase.io/docs/api-records/#listsearch-records).
+     * Returns an object with `filter`, `fields`, `expand` and `sort`.
      *
      * If a filter function is not provided (e.g. PocketBase's native `pb.filter`) as a parameter we return an object with the query string and values inside `filter`.
      *
@@ -957,7 +971,9 @@ export interface QueryBuilderEnd {
      *
      * @since 0.3.0
      */
-    build(): QueryResult<RawQueryObject>
+    build(): HasGlobalFilter extends true
+        ? QueryResult<string>
+        : QueryResult<RawQueryObject>
     build(filter: FilterFunction): QueryResult<string>
     build(filter?: FilterFunction): QueryResult<RawQueryObject | string>
 }

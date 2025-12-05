@@ -37,7 +37,7 @@ interface Post {
 
 const pb = new PocketBase()
 
-test('filter discrepancy', () => {
+test('filter function discrepancy', () => {
     const query1 = pbQuery<Post>()
         .equal('author.name', 'John')
         .and()
@@ -75,6 +75,83 @@ test('filter discrepancy', () => {
         .build(pb.filter)
 
     expect(query1.filter).toBe(query2.filter)
+})
+
+test('global filter function', () => {
+    const customFilter: FilterFunction = (raw, params) => {
+        if (!params) {
+            return raw
+        }
+
+        let sanitizedQuery = raw
+
+        for (const key in params) {
+            let val = params[key]
+            switch (typeof val) {
+                case 'number':
+                    val = `'test${val}'`
+                    break
+                default:
+                    val = `'${val}'`
+            }
+            sanitizedQuery = sanitizedQuery.replaceAll(
+                `{:${key}}`,
+                val as string,
+            )
+        }
+
+        return sanitizedQuery
+    }
+
+    const query1 = pbQuery<User>()
+        .fields([])
+        .expand([])
+        .sort([])
+        .equal('age', 10)
+        .and()
+        .equal('city', 'hola')
+        .build()
+
+    expect(query1.filter).toMatchObject({
+        raw: 'age={:age1} && city={:city1}',
+        values: {
+            age1: 10,
+            city1: 'hola',
+        },
+    })
+
+    const query2 = pbQuery<User>(filter)
+        .fields([])
+        .expand([])
+        .sort([])
+        .equal('age', 10)
+        .and()
+        .equal('city', 'hola')
+        .build()
+
+    expect(query2.filter).toBe("age=10 && city='hola'")
+
+    const query3 = pbQuery<User>()
+        .fields([])
+        .expand([])
+        .sort([])
+        .equal('age', 10)
+        .and()
+        .equal('city', 'hola')
+        .build(filter)
+
+    expect(query3.filter).toBe("age=10 && city='hola'")
+
+    const query4 = pbQuery<User>(filter)
+        .fields([])
+        .expand([])
+        .sort([])
+        .equal('age', 10)
+        .and()
+        .equal('city', 'hola')
+        .build(customFilter)
+
+    expect(query4.filter).toBe("age='test10' && city='hola'")
 })
 
 test('post query', () => {

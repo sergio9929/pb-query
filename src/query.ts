@@ -19,10 +19,78 @@ import {
     prepareFieldsForExpand,
 } from './utils'
 
+/**
+ * Builds a query to help listing records in [PocketBase](https://pocketbase.io/).
+ *
+ * By default, we don't filter your query. Using `.build()` returns the unfiltered query and values separately. This is useful if you want to use `pb-query` inside [PocketBase Hooks](https://pocketbase.io/docs/js-overview/), you can see how in the [tutorial](https://sergio9929.github.io/pb-query/getting-started/tutorial).
+ *
+ * @example
+ * ```ts
+ * const query = pbQuery<Post>()
+ *   .like('content', 'Top Secret%')
+ *   .build();
+ *
+ * console.log(query);
+ * // {
+ * //   fields: '',
+ * //   expand: '',
+ * //   sort: '',
+ * //   filter: {
+ * //     raw: 'content~{:content1}',
+ * //     values: { content1: 'Top Secret%' }
+ * //   }
+ * // }
+ * ```
+ *
+ * If you want to use `pb-query` in your app (this is the main usecase of `pb-query`), you need to filter it. We expose a filter function, but we recommend using the native `pb.filter()` function instead.
+ *
+ * @example
+ * ```ts
+ * import PocketBase from 'pocketbase';
+ *
+ * // PocketBase instance
+ * const pb = new PocketBase("https://example.com");
+ *
+ * const queryA = pbQuery<Post>()
+ *   .like('content', 'Top Secret%')
+ *   .build(pb.filter); // use PocketBase's filter function
+ *
+ * console.log(queryA.filter);
+ * // "content~'Top Secret%'"
+ *
+ * const queryB = pbQuery<Post>(pb.filter) // use PocketBase's filter function
+ *   .like('content', 'Top Secret%')
+ *   .build();
+ *
+ * console.log(queryB.filter);
+ * // "content~'Top Secret%'"
+ * ```
+ *
+ * You can override the filter function passed to `pbQuery()` passing another one to `.build()`.
+ *
+ * @example
+ * ```ts
+ * const query = pbQuery<Post>(pb.filter)
+ *   .like('content', 'Top Secret%')
+ *   .build(customFilter); // This has the priority
+ * ```
+ *
+ * Read more about how to query in PocketBase in the [official documentation](https://pocketbase.io/docs/api-records/#listsearch-records) or about how to use `pb-query` in [our documentation](https://sergio9929.github.io/pb-query/).
+ *
+ * @since 0.4.0
+ */
 export function pbQuery<
     T = Record<string, unknown>,
     MaxDepth extends number = 6,
->(): QueryBuilderStart<T, MaxDepth> {
+>(): QueryBuilderStart<T, MaxDepth>
+export function pbQuery<
+    T = Record<string, unknown>,
+    MaxDepth extends number = 6,
+>(globalFilter: FilterFunction): QueryBuilderStart<T, MaxDepth, true>
+export function pbQuery<
+    T = Record<string, unknown>,
+    MaxDepth extends number = 6,
+>(globalFilter?: FilterFunction): QueryBuilderStart<T, MaxDepth, boolean> {
     let query = ''
     let fields = ''
     let expand = ''
@@ -95,6 +163,19 @@ export function pbQuery<
                 sort,
             }
         }
+
+        if (typeof globalFilter === 'function') {
+            return {
+                expand,
+                fields,
+                filter: globalFilter(
+                    cleanedQuery,
+                    Object.fromEntries(valueMap),
+                ),
+                sort,
+            }
+        }
+
         return {
             expand,
             fields,

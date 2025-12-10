@@ -551,7 +551,7 @@ export interface QueryBuilder<
     ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
-     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving multi-valued fields ([back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield)).
      *
      * Matches records where at least one of the values in the given `key` equals `value`.
      *
@@ -569,7 +569,7 @@ export interface QueryBuilder<
     ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
-     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving multi-valued fields ([back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield)).
      *
      * Matches records where at least one of the values in the given `key` is not equal to `value`.
      *
@@ -587,7 +587,7 @@ export interface QueryBuilder<
     ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
-     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving multi-valued fields ([back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield)).
      *
      * Matches records where at least one of the values in the given `key` is greater than `value`.
      *
@@ -602,7 +602,7 @@ export interface QueryBuilder<
     ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
-     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving multi-valued fields ([back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield)).
      *
      * Matches records where at least one of the values in the given `key` is greater than or equal to `value`.
      *
@@ -617,7 +617,7 @@ export interface QueryBuilder<
     ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
-     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving multi-valued fields ([back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield)).
      *
      * Matches records where at least one of the values in the given `key` is less than `value`.
      *
@@ -632,7 +632,7 @@ export interface QueryBuilder<
     ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
-     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving multi-valued fields ([back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield)).
      *
      * Matches records where at least one of the values in the given `key` is less than or equal to `value`.
      *
@@ -647,7 +647,7 @@ export interface QueryBuilder<
     ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
-     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving multi-valued fields ([back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield)).
      *
      * Matches records where at least one of the values in the given `key` contains `value`.
      *
@@ -675,7 +675,7 @@ export interface QueryBuilder<
     ): Omit<RestrictedQueryBuilder<T, MaxDepth, Once>, Once>
 
     /**
-     * Useful for queries involving [back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield).
+     * Useful for queries involving multi-valued fields ([back-relations](https://pocketbase.io/docs/working-with-relations/#back-relations), [multiple relation](https://pocketbase.io/docs/collections/#relationfield), [multiple select](https://pocketbase.io/docs/collections/#selectfield), or [multiple file](https://pocketbase.io/docs/collections/#filefield)).
      *
      * Matches records where at least one of the values in the given `key` doesn't contain `value`.
      *

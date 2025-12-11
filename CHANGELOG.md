@@ -1,5 +1,11 @@
 # @sergio9929/pb-query
 
+## 0.3.3
+
+### Patch Changes
+
+- Fix exported GeoPoint type
+
 ## 0.3.2
 
 ### Patch Changes
@@ -45,8 +51,7 @@
   // Output: "name='Sergio' && city='New York'"
   ```
 
-  > [!NOTE]
-  > `pb-query` now cleans the final query by removing unnecessary spaces and any leading or trailing logical operators, even inside the custom() function.
+  > [!NOTE] > `pb-query` now cleans the final query by removing unnecessary spaces and any leading or trailing logical operators, even inside the custom() function.
 
 ## 0.3.1
 

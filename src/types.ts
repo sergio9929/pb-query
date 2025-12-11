@@ -19,7 +19,7 @@ export type QueryResult<T = string> = {
     sort: string
 }
 
-export type GeoPoint = { lon: string; lat: string }
+export type GeoPoint = { lon: number; lat: number }
 
 type SortKey<K extends string> = `${K}` | `-${K}` | `+${K}`
 

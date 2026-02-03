@@ -33,15 +33,15 @@
     "author": "sergio9929",
     "license": "UNLICENSED",
     "devDependencies": {
-        "@biomejs/biome": "^2.3.8",
+        "@biomejs/biome": "^2.3.14",
         "@changesets/cli": "^2.29.8",
         "husky": "^9.1.7",
         "lint-staged": "^16.2.7",
         "npm-run-all": "^4.1.5",
-        "pocketbase": "^0.26.5",
-        "tsdown": "^0.12.9",
+        "pocketbase": "^0.26.8",
+        "tsdown": "^0.20.1",
         "typescript": "^5.9.3",
-        "vitest": "^4.0.15"
+        "vitest": "^4.0.18"
     },
     "lint-staged": {
         "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": "pnpm lint"

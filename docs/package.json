@@ -8,7 +8,7 @@
     },
     "dependencies": {
         "better-sqlite3": "^12.6.2",
-        "docus": "^5.4.4",
+        "docus": "^5.5.0",
         "nuxt": "^4.3.0",
         "vue": "^3.5.27"
     }

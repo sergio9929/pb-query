@@ -8,4 +8,11 @@ export default defineAppConfig({
     github: {
         rootDir: 'docs',
     },
+    ui: {
+        prose: {
+            a: {
+                base: 'prose-a',
+            },
+        },
+    },
 })

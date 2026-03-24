@@ -11,7 +11,7 @@ export default defineAppConfig({
     ui: {
         prose: {
             a: {
-                base: 'prose-a',
+                base: '[&>code]:text-inherit prose-a',
             },
         },
     },

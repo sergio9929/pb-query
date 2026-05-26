@@ -19,20 +19,25 @@ Build type-safe PocketBase queries using TypeScript
   to: /getting-started/introduction
   trailing-icon: i-lucide-arrow-right
   ---
+
   Get started
   :::
 
   :::star-on-github
   Star on GitHub
   :::
+
 ::
 
 ::u-page-section
+
   :::u-page-grid{.lg:grid-cols-2}
+
     ::::u-page-card
     ---
     spotlight: true
     ---
+
     ![Field name suggestions](/suggestions.webp)
 
     #title
@@ -40,12 +45,14 @@ Build type-safe PocketBase queries using TypeScript
 
     #description
     Get autocompletion for fields and type safety based on your schema.
+
     ::::
 
     ::::u-page-card
     ---
     spotlight: true
     ---
+
     ![JSDoc](/jsdoc.webp)
 
     #title
@@ -53,6 +60,7 @@ Build type-safe PocketBase queries using TypeScript
 
     #description
     Get examples and explanations directly in your IDE with JSDoc.
+
     ::::
 
     ::::u-page-card
@@ -62,6 +70,7 @@ Build type-safe PocketBase queries using TypeScript
     orientation: horizontal
     to: /operators/helpers
     ---
+
     :UIcon{name="i-lucide-arrow-right" class="text-muted w-8 h-8" style="margin-left: auto;"}
 
     #title
@@ -69,6 +78,9 @@ Build type-safe PocketBase queries using TypeScript
 
     #description
     Use built-in helpers like `.search()`, `.between()`, `.in()`, `.isNull()`, and more.
+
     ::::
+
   :::
+
 ::

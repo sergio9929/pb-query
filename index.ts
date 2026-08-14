@@ -12,4 +12,3 @@ export type {
     RawQueryObject,
     RestrictedQueryBuilder,
 } from './src/types'
-export { filter } from './src/utils'

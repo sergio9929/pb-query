@@ -1,3 +1,4 @@
+import PocketBase from 'pocketbase'
 import { assertType, expectTypeOf, test } from 'vitest'
 import { pbQuery } from '../src/query'
 import type {
@@ -7,7 +8,6 @@ import type {
     PathFields,
     RawQueryObject,
 } from '../src/types'
-import { filter } from '../src/utils'
 
 interface User {
     id: string
@@ -37,10 +37,12 @@ interface Post {
     isVisible: boolean
 }
 
+const pb = new PocketBase()
+
 test('build function types', () => {
     const { build } = pbQuery<Post>()
 
-    assertType<string>(build(filter).filter)
+    assertType<string>(build(pb.filter).filter)
     assertType<RawQueryObject>(build().filter)
 })
 
